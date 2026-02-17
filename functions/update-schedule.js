@@ -83,12 +83,11 @@ function validateAddress(address) {
 
 /**
  * Read clients from Netlify Blobs
- * @param {Object} context - Netlify context for Blobs authentication
  * @returns {Promise<Array>} Clients array
  */
-async function readClients(context) {
+async function readClients() {
     try {
-        const store = getStore({ name: 'abra-data', context });
+        const store = getStore('abra-data');
         const clients = await store.get('clients', { type: 'json' }) || [];
         return clients;
     } catch (error) {
@@ -100,11 +99,10 @@ async function readClients(context) {
 /**
  * Write clients to Netlify Blobs
  * @param {Array} clients - Clients array to write
- * @param {Object} context - Netlify context for Blobs authentication
  */
-async function writeClients(clients, context) {
+async function writeClients(clients) {
     try {
-        const store = getStore({ name: 'abra-data', context });
+        const store = getStore('abra-data');
         await store.setJSON('clients', clients);
     } catch (error) {
         console.error('Error writing clients to Blobs:', error);
@@ -114,12 +112,11 @@ async function writeClients(clients, context) {
 
 /**
  * Read schedule from Netlify Blobs
- * @param {Object} context - Netlify context for Blobs authentication
  * @returns {Promise<Object>} Schedule data
  */
-async function readSchedule(context) {
+async function readSchedule() {
     try {
-        const store = getStore({ name: 'abra-data', context });
+        const store = getStore('abra-data');
         const schedule = await store.get('schedule', { type: 'json' }) || {};
         return schedule;
     } catch (error) {
@@ -131,11 +128,10 @@ async function readSchedule(context) {
 /**
  * Write schedule to Netlify Blobs
  * @param {Object} schedule - Schedule data to write
- * @param {Object} context - Netlify context for Blobs authentication
  */
-async function writeSchedule(schedule, context) {
+async function writeSchedule(schedule) {
     try {
-        const store = getStore({ name: 'abra-data', context });
+        const store = getStore('abra-data');
         await store.setJSON('schedule', schedule);
     } catch (error) {
         console.error('Error writing schedule to Blobs:', error);
@@ -151,9 +147,9 @@ async function writeSchedule(schedule, context) {
  * @param {Array<string>} selectedWorkers - Array of worker names
  * @returns {Promise<Object>} Created job with generated id and maps_url
  */
-async function addJob(date, teamId, address, selectedWorkers, context) {
+async function addJob(date, teamId, address, selectedWorkers) {
     // STEP 1: READ
-    const schedule = await readSchedule(context);
+    const schedule = await readSchedule();
 
     // Ensure date exists in schedule
     if (!schedule[date]) {
@@ -212,9 +208,9 @@ async function addJob(date, teamId, address, selectedWorkers, context) {
  * @param {Array<string>} assignedWorkers - Array of worker names
  * @returns {Promise<Object>} Updated team data
  */
-async function updateWorkers(date, teamId, assignedWorkers, context) {
+async function updateWorkers(date, teamId, assignedWorkers) {
     // STEP 1: READ
-    const schedule = await readSchedule(context);
+    const schedule = await readSchedule();
 
     // Ensure date exists in schedule
     if (!schedule[date]) {
@@ -250,9 +246,9 @@ async function updateWorkers(date, teamId, assignedWorkers, context) {
  * @param {string} jobId - UUID of the job to cancel
  * @returns {Promise<Object>} Updated job object
  */
-async function cancelJob(date, teamId, jobId, context) {
+async function cancelJob(date, teamId, jobId) {
     // STEP 1: READ
-    const schedule = await readSchedule(context);
+    const schedule = await readSchedule();
 
     // Validate date/team exist
     if (!schedule[date] || !schedule[date][teamId]) {
@@ -369,7 +365,7 @@ exports.handler = async (event, context) => {
             }
 
             // Perform update
-            const result = await updateWorkers(date, team_id, assigned_workers, context);
+            const result = await updateWorkers(date, team_id, assigned_workers);
 
             return {
                 statusCode: 200,
@@ -419,7 +415,7 @@ exports.handler = async (event, context) => {
             }
 
             try {
-                const updatedJob = await cancelJob(date, team_id, job_id, context);
+                const updatedJob = await cancelJob(date, team_id, job_id);
 
                 return {
                     statusCode: 200,
@@ -454,7 +450,7 @@ exports.handler = async (event, context) => {
                 return { statusCode: 400, body: JSON.stringify({ error: 'Client "house_number" is required.' }) };
             }
 
-            const clients = await readClients(context);
+            const clients = await readClients();
             const newClient = {
                 id: generateUUID(),
                 name: name.trim(),
@@ -463,7 +459,7 @@ exports.handler = async (event, context) => {
                 notes: (notes && typeof notes === 'string') ? notes.trim() : ''
             };
             clients.push(newClient);
-            await writeClients(clients, context);
+            await writeClients(clients);
 
             return {
                 statusCode: 201,
@@ -479,13 +475,13 @@ exports.handler = async (event, context) => {
                 return { statusCode: 400, body: JSON.stringify({ error: 'Missing or invalid "client_id".' }) };
             }
 
-            const clients = await readClients(context);
+            const clients = await readClients();
             const idx = clients.findIndex(c => c.id === client_id);
             if (idx === -1) {
                 return { statusCode: 404, body: JSON.stringify({ error: `Client "${client_id}" not found.` }) };
             }
             const removed = clients.splice(idx, 1)[0];
-            await writeClients(clients, context);
+            await writeClients(clients);
 
             return {
                 statusCode: 200,
@@ -540,7 +536,7 @@ exports.handler = async (event, context) => {
         // Add job to schedule using Read-Modify-Write pattern
         let createdJob;
         try {
-            createdJob = await addJob(date, team_id, address, selected_workers || [], context);
+            createdJob = await addJob(date, team_id, address, selected_workers || []);
         } catch (jobError) {
             console.error('Error adding job:', jobError);
             return {
