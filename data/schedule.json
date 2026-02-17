@@ -12,15 +12,7 @@
   "18-02-2026": {
     "Team_A": {
       "assigned_workers": [],
-      "addresses": [
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-444444444444",
-          "street": "Pine Lane",
-          "house_number": "99",
-          "status": "completed",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=99%20Pine%20Lane"
-        }
-      ]
+      "addresses": []
     },
     "Team_B": {
       "assigned_workers": [],
