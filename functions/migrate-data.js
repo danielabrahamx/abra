@@ -10,7 +10,7 @@ const path = require('path');
 const SCHEDULE_PATH = path.join(__dirname, '..', 'data', 'schedule.json');
 const CLIENTS_PATH = path.join(__dirname, '..', 'data', 'clients.json');
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
     // CORS preflight
     if (event.httpMethod === 'OPTIONS') {
         return {
@@ -24,7 +24,7 @@ exports.handler = async (event) => {
     }
 
     try {
-        const store = getStore('abra-data');
+        const store = getStore({ name: 'abra-data', context });
         const results = {};
 
         // Migrate schedule.json

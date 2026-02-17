@@ -5,7 +5,7 @@
 
 const { getStore } = require('@netlify/blobs');
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
     // CORS preflight
     if (event.httpMethod === 'OPTIONS') {
         return {
@@ -20,8 +20,8 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Get the blob store for this site
-        const store = getStore('abra-data');
+        // Get the blob store for this site with context
+        const store = getStore({ name: 'abra-data', context });
 
         // Retrieve clients from blob storage
         const clients = await store.get('clients', { type: 'json' }) || [];
