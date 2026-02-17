@@ -649,7 +649,7 @@
           "id": "de0d1ee9-570b-473e-a3ec-75881cca9d73",
           "street": "Street",
           "house_number": "5",
-          "status": "pending",
+          "status": "cancelled",
           "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Street",
           "client_name": "Helen2"
         }
