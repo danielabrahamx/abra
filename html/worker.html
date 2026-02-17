@@ -6,13 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worker View - Schedule</title>
 
-    <!-- Tailwind CSS CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         /* High contrast custom styles for outdoor visibility */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -289,11 +291,11 @@
                      target="_blank" 
                      rel="noopener noreferrer"
                      class="block w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-center font-bold rounded-lg touch-target px-4 py-3 transition-colors">
-                    🗺️ Launch Navigation
+                    Launch Navigation
                   </a>
                   ` : `
                   <div class="block w-full bg-gray-300 text-gray-500 text-center font-bold rounded-lg px-4 py-3 cursor-not-allowed">
-                    ✕ Cancelled
+                    Cancelled
                   </div>
                   `}
                 </div>
