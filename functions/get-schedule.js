@@ -1,10 +1,10 @@
 /**
  * get-schedule.js - Netlify Function to retrieve schedule data
- * Returns schedule from Netlify Blobs with support for assigned_workers arrays
+ * Returns schedule from GitHub with support for assigned_workers arrays
  * Generates default 7-day template if schedule is missing/empty
  */
 
-const { getStore } = require('@netlify/blobs');
+const { readJSON } = require('./lib/github-storage');
 
 /**
  * Generate a default 7-day schedule template
@@ -41,22 +41,17 @@ function generateDefaultSchedule() {
 }
 
 /**
- * Read schedule from Blobs, or return default template
+ * Read schedule from GitHub, or return default template
  * @returns {Object} Schedule data
  */
 async function readSchedule() {
     try {
-        console.log('get-schedule: initializing store...');
-        // Get the blob store for this site
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
-
-        // Retrieve schedule from blob storage
-        console.log('get-schedule: fetching data...');
-        let schedule = await store.get('schedule', { type: 'json' });
+        console.log('get-schedule: reading from GitHub...');
+        let schedule = await readJSON('data/schedule.json');
 
         // If no schedule exists, generate default
         if (!schedule || Object.keys(schedule).length === 0) {
-            console.log('Schedule not found in Blobs, generating default template');
+            console.log('Schedule not found, generating default template');
             return generateDefaultSchedule();
         }
 
@@ -81,7 +76,7 @@ async function readSchedule() {
 
         return schedule;
     } catch (error) {
-        console.error('Error reading schedule from Blobs:', error);
+        console.error('Error reading schedule from GitHub:', error);
         return generateDefaultSchedule();
     }
 }

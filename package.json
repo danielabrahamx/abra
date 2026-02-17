@@ -4,7 +4,5 @@
     "description": "Weekly schedule manager for Abra team",
     "type": "commonjs",
     "private": true,
-    "dependencies": {
-        "@netlify/blobs": "^10.7.0"
-    }
+    "dependencies": {}
 }

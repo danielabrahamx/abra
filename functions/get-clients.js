@@ -1,9 +1,9 @@
 /**
- * get-clients.js - Netlify Function to read clients from Netlify Blobs
- * Returns the clients array from blob storage
+ * get-clients.js - Netlify Function to read clients from GitHub
+ * Returns the clients array from GitHub repository
  */
 
-const { getStore } = require('@netlify/blobs');
+const { readJSON } = require('./lib/github-storage');
 
 exports.handler = async (event, context) => {
     // CORS preflight
@@ -20,13 +20,9 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        console.log('get-clients: initializing store...');
-        // Get the blob store for this site
-        const store = getStore({ name: 'abra-data', context });
-
-        // Retrieve clients from blob storage
-        const clients = await store.get('clients', { type: 'json' }) || [];
-        console.log(`get-clients: retrieved ${clients.length} clients`);
+        console.log('get-clients: reading from GitHub...');
+        const clients = await readJSON('data/clients.json');
+        console.log(`get-clients: retrieved ${clients ? clients.length : 0} clients`);
 
         return {
             statusCode: 200,
@@ -34,10 +30,10 @@ exports.handler = async (event, context) => {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify(clients)
+            body: JSON.stringify(clients || [])
         };
     } catch (error) {
-        console.error('Error reading clients from Blobs:', error);
+        console.error('Error reading clients from GitHub:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Failed to read clients data', message: error.message })
