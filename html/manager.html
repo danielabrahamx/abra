@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Manager - Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Sortable.js for drag-and-drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <!-- HTMX for server requests -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+        .worker-pill {
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .worker-pill:active {
+            cursor: grabbing;
+        }
+
+        .worker-pill.sortable-ghost {
+            opacity: 0.4;
+            background: #94a3b8 !important;
+        }
+
+        .worker-pill.sortable-chosen {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .worker-pill.sortable-drag {
+            opacity: 0.9;
+        }
+
+        .day-column {
+            min-height: 400px;
+        }
+
+        .team-drop-zone {
+            min-height: 56px;
+            transition: all 0.2s ease;
+            border: 2px dashed transparent;
+        }
+
+        .team-drop-zone.sortable-ghost-class {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        /* Sortable placeholder highlight */
+        .team-drop-zone .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        /* Toast notification */
+        .toast {
+            animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes toast-in {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toast-out {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Empty state placeholder */
+        .team-drop-zone:empty::after {
+            content: 'Drop workers here';
+            display: block;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            padding: 0.75rem;
+            font-style: italic;
+        }
+
+        /* Quick Add form */
+        .quick-add-fields {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease, padding 0.25s ease;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .quick-add-fields.open {
+            max-height: 200px;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Cancelled job styling */
+        .job-card.cancelled {
+            opacity: 0.5;
+            background: #f3f4f6 !important;
+            border-color: #d1d5db !important;
+        }
+
+        .job-card.cancelled .job-address {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .job-card.cancelled .job-status-badge {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 h-screen overflow-hidden">
+    <div class="flex h-full">
+        <!-- Worker Roster Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shadow-lg">
+            <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+                <h2 class="text-lg font-bold text-white">Worker Roster</h2>
+                <p class="text-xs text-blue-100 mt-1">Drag to assign shifts</p>
+            </div>
+            <div id="worker-roster" class="p-4 space-y-2 overflow-y-auto flex-1">
+                <!-- Worker pills rendered by JS -->
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50">
+                <button id="btn-clear-all"
+                    class="w-full px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                    Clear All Assignments
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white border-b border-gray-200 p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Weekly Schedule Manager</h1>
+                        <p class="text-sm text-gray-500 mt-1" id="date-range">Loading...</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btn-prev-week"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            ← Previous
+                        </button>
+                        <button id="btn-today"
+                            class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                            Today
+                        </button>
+                        <button id="btn-next-week"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 7-Day Grid -->
+            <div id="schedule-grid" class="flex-1 overflow-x-auto overflow-y-auto p-4">
+                <div class="flex gap-3 min-w-max h-full">
+                    <!-- Day columns generated by JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        // ─── Constants ────────────────────────────────────────────
+        const WORKERS = ['Amylea', 'Angelo', 'Chloe', 'George', 'Leeroy', 'Myka', 'Nathan', 'Olivia'];
+        const TEAMS = ['Team_A', 'Team_B'];
+
+        // API endpoints – swap comments for production vs local dev
+        // const API_GET  = '/.netlify/functions/get-schedule';
+        // const API_POST = '/.netlify/functions/update-schedule';
+        const API_GET = '../data/schedule.json';
+        const API_POST = '/.netlify/functions/update-schedule';
+
+        // Worker pill color map for visual distinction
+        const WORKER_COLORS = {
+            'Amylea': { bg: 'from-rose-500 to-rose-600', hover: 'hover:from-rose-600 hover:to-rose-700' },
+            'Angelo': { bg: 'from-amber-500 to-amber-600', hover: 'hover:from-amber-600 hover:to-amber-700' },
+            'Chloe': { bg: 'from-emerald-500 to-emerald-600', hover: 'hover:from-emerald-600 hover:to-emerald-700' },
+            'George': { bg: 'from-sky-500 to-sky-600', hover: 'hover:from-sky-600 hover:to-sky-700' },
+            'Leeroy': { bg: 'from-violet-500 to-violet-600', hover: 'hover:from-violet-600 hover:to-violet-700' },
+            'Myka': { bg: 'from-pink-500 to-pink-600', hover: 'hover:from-pink-600 hover:to-pink-700' },
+            'Nathan': { bg: 'from-teal-500 to-teal-600', hover: 'hover:from-teal-600 hover:to-teal-700' },
+            'Olivia': { bg: 'from-indigo-500 to-indigo-600', hover: 'hover:from-indigo-600 hover:to-indigo-700' },
+        };
+
+        let currentWeekOffset = 0;
+        let scheduleData = {};
+        let sortableInstances = [];
+
+        // ─── Init ─────────────────────────────────────────────────
+        function init() {
+            renderWorkerRoster();
+            renderScheduleGrid();
+            loadScheduleData();
+
+            // Button listeners
+            document.getElementById('btn-prev-week').addEventListener('click', () => { currentWeekOffset--; renderScheduleGrid(); loadScheduleData(); });
+            document.getElementById('btn-today').addEventListener('click', () => { currentWeekOffset = 0; renderScheduleGrid(); loadScheduleData(); });
+            document.getElementById('btn-next-week').addEventListener('click', () => { currentWeekOffset++; renderScheduleGrid(); loadScheduleData(); });
+            document.getElementById('btn-clear-all').addEventListener('click', clearAllAssignments);
+        }
+
+        // ─── Roster Sidebar ───────────────────────────────────────
+        function renderWorkerRoster() {
+            const roster = document.getElementById('worker-roster');
+            roster.innerHTML = WORKERS.map(worker => {
+                const colors = WORKER_COLORS[worker];
+                return `
+                    <div class="worker-pill px-4 py-3 bg-gradient-to-r ${colors.bg} ${colors.hover} text-white rounded-lg shadow-md hover:shadow-lg font-medium text-sm"
+                         data-worker="${worker}">
+                        ${worker}
+                    </div>`;
+            }).join('');
+
+            // Sortable: roster is clone-source, never empties
+            Sortable.create(roster, {
+                group: { name: 'workers', pull: 'clone', put: false },
+                sort: false,
+                animation: 150,
+            });
+        }
+
+        // ─── Date Helpers ─────────────────────────────────────────
+        function getWeekDates() {
+            const today = new Date();
+            today.setDate(today.getDate() + (currentWeekOffset * 7));
+            const currentDay = today.getDay();
+            const diff = currentDay === 0 ? -6 : 1 - currentDay;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + diff);
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                dates.push(d);
+            }
+            return dates;
+        }
+
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function formatDisplayDate(date) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return {
+                dayName: days[date.getDay()],
+                dayNum: date.getDate(),
+                month: months[date.getMonth()],
+                fullDate: formatDate(date)
+            };
+        }
+
+        // ─── Schedule Grid ────────────────────────────────────────
+        function renderScheduleGrid() {
+            // Destroy previous Sortable instances to avoid memory leaks
+            sortableInstances.forEach(s => s.destroy());
+            sortableInstances = [];
+
+            const grid = document.getElementById('schedule-grid');
+            const dates = getWeekDates();
+
+            // Header date range
+            document.getElementById('date-range').textContent =
+                `${formatDate(dates[0])} to ${formatDate(dates[6])}`;
+
+            grid.innerHTML = `<div class="flex gap-3 min-w-max h-full">` +
+                dates.map(date => {
+                    const display = formatDisplayDate(date);
+                    const dateKey = display.fullDate;
+                    const isToday = formatDate(new Date()) === dateKey;
+
+                    return `
+                        <div class="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm border ${isToday ? 'border-blue-400 border-2' : 'border-gray-200'}"
+                             id="day-col-${dateKey}">
+                            <!-- Day header -->
+                            <div class="p-3 border-b ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}">
+                                <div class="text-xs font-semibold ${isToday ? 'text-blue-600' : 'text-gray-500'} uppercase tracking-wide">
+                                    ${display.dayName}
+                                </div>
+                                <div class="text-lg font-bold ${isToday ? 'text-blue-700' : 'text-gray-900'} mt-1">
+                                    ${display.dayNum} ${display.month}
+                                </div>
+                                <div class="text-xs ${isToday ? 'text-blue-600' : 'text-gray-400'} mt-1">
+                                    ${dateKey}
+                                </div>
+                            </div>
+
+                            <!-- Team sections -->
+                            <div class="day-column p-2 space-y-3">
+                                ${TEAMS.map(teamId => `
+                                    <div class="rounded-lg border border-gray-200 overflow-hidden">
+                                        <div class="px-3 py-1.5 bg-gray-100 border-b border-gray-200">
+                                            <span class="text-xs font-bold ${teamId === 'Team_A' ? 'text-blue-700' : 'text-purple-700'} uppercase tracking-wide">
+                                                ${teamId.replace('_', ' ')}
+                                            </span>
+                                        </div>
+                                        <div id="team-${teamId}-${dateKey}"
+                                             class="team-drop-zone p-2 space-y-1.5 min-h-[56px]"
+                                             data-date="${dateKey}"
+                                             data-team="${teamId}">
+                                            <!-- Worker pills dropped here -->
+                                        </div>
+                                        <!-- Quick Add Address form -->
+                                        <div class="quick-add-form border-t border-gray-200 bg-gray-50">
+                                            <button type="button"
+                                                    class="quick-add-toggle w-full px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-left"
+                                                    data-date="${dateKey}" data-team="${teamId}">
+                                                ➕ Add Address
+                                            </button>
+                                            <div class="quick-add-fields px-3" data-date="${dateKey}" data-team="${teamId}">
+                                                <input type="text" name="street" placeholder="Street"
+                                                       class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                                                <input type="text" name="house_number" placeholder="House #"
+                                                       class="w-full mb-1.5 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                                                <button type="button"
+                                                        class="quick-add-submit w-full px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                                                        data-date="${dateKey}" data-team="${teamId}">
+                                                    Create Job
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                }).join('') +
+                `</div>`;
+
+            // Create Sortable instances for each team drop zone
+            initDropZones();
+            initQuickAddForms();
+        }
+
+        // ─── Sortable Drop Zones ──────────────────────────────────
+        function initDropZones() {
+            document.querySelectorAll('.team-drop-zone').forEach(zone => {
+                const instance = Sortable.create(zone, {
+                    group: { name: 'workers', pull: true, put: true },
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+
+                    // Fires when a pill is added to this zone (from roster or another zone)
+                    onAdd(evt) {
+                        const worker = evt.item.dataset.worker;
+                        const date = zone.dataset.date;
+                        const team = zone.dataset.team;
+
+                        // Prevent duplicates in the same team/date
+                        const existing = zone.querySelectorAll(`[data-worker="${worker}"]`);
+                        if (existing.length > 1) {
+                            evt.item.remove();
+                            showToast(`${worker} is already in ${team.replace('_', ' ')}`, 'warning');
+                            return;
+                        }
+
+                        // Restyle pill for the drop zone (add remove button, smaller size)
+                        evt.item.className = '';
+                        stylePillForZone(evt.item, worker);
+
+                        syncTeamToServer(date, team);
+                    },
+
+                    // Fires when order changes within the same zone
+                    onUpdate(evt) {
+                        syncTeamToServer(zone.dataset.date, zone.dataset.team);
+                    },
+
+                    // Fires when a pill is removed from this zone (moved to another)
+                    onRemove(evt) {
+                        syncTeamToServer(zone.dataset.date, zone.dataset.team);
+                    }
+                });
+                sortableInstances.push(instance);
+            });
+        }
+
+        // ─── Quick Add Forms ──────────────────────────────────────
+        function initQuickAddForms() {
+            // Toggle buttons
+            document.querySelectorAll('.quick-add-toggle').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const date = btn.dataset.date;
+                    const team = btn.dataset.team;
+                    const fields = btn.parentElement.querySelector('.quick-add-fields');
+                    fields.classList.toggle('open');
+                    btn.textContent = fields.classList.contains('open') ? '✕ Close' : '➕ Add Address';
+                });
+            });
+
+            // Submit buttons
+            document.querySelectorAll('.quick-add-submit').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const date = btn.dataset.date;
+                    const team = btn.dataset.team;
+                    const container = btn.closest('.quick-add-fields');
+                    const streetInput = container.querySelector('input[name="street"]');
+                    const houseInput = container.querySelector('input[name="house_number"]');
+                    addNewJob(date, team, streetInput, houseInput, container);
+                });
+            });
+        }
+
+        // ─── Add New Job ──────────────────────────────────────────
+        function addNewJob(date, teamId, streetInput, houseInput, formContainer) {
+            const street = streetInput.value.trim();
+            const houseNumber = houseInput.value.trim();
+
+            if (!street || !houseNumber) {
+                showToast('Please fill in both Street and House #', 'warning');
+                return;
+            }
+
+            const payload = {
+                action: 'add-job',
+                date: date,
+                team_id: teamId,
+                address: {
+                    street: street,
+                    house_number: houseNumber
+                }
+            };
+
+            fetch(API_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    showToast(`Job added: ${houseNumber} ${street}`, 'success');
+                    // Clear the form
+                    streetInput.value = '';
+                    houseInput.value = '';
+                    formContainer.classList.remove('open');
+                    // Find and reset the toggle button text
+                    const toggle = formContainer.parentElement.querySelector('.quick-add-toggle');
+                    if (toggle) toggle.textContent = '➕ Add Address';
+                    // Reload to show the new job card
+                    loadScheduleData();
+                })
+                .catch(err => {
+                    console.error('Add job error:', err);
+                    showToast(`Failed to add job — ${err.message || 'Network error'}`, 'error');
+                });
+        }
+
+        // ─── Style a pill for inside the team drop zone ───────────
+        function stylePillForZone(el, worker) {
+            const colors = WORKER_COLORS[worker];
+            el.className = `worker-pill px-3 py-2 bg-gradient-to-r ${colors.bg} text-white rounded-lg shadow-sm text-sm font-medium flex items-center justify-between group hover:shadow-md transition-all`;
+            el.dataset.worker = worker;
+            el.innerHTML = `
+                <span>${worker}</span>
+                <button class="remove-btn ml-2 text-white opacity-0 group-hover:opacity-100 hover:bg-white hover:bg-opacity-20 rounded-full w-5 h-5 flex items-center justify-center transition-all"
+                        title="Remove ${worker}">×</button>`;
+
+            // Attach remove handler
+            el.querySelector('.remove-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const zone = el.closest('.team-drop-zone');
+                el.remove();
+                syncTeamToServer(zone.dataset.date, zone.dataset.team);
+            });
+        }
+
+        // ─── Sync a team's workers to the server via HTMX-style POST ──
+        function syncTeamToServer(date, teamId) {
+            const zone = document.getElementById(`team-${teamId}-${date}`);
+            if (!zone) return;
+
+            // Collect worker names currently in the zone
+            const workers = Array.from(zone.querySelectorAll('[data-worker]'))
+                .map(el => el.dataset.worker);
+
+            // Update local state
+            if (!scheduleData[date]) scheduleData[date] = {};
+            if (!scheduleData[date][teamId]) scheduleData[date][teamId] = { assigned_workers: [], addresses: [] };
+            scheduleData[date][teamId].assigned_workers = workers;
+
+            // Fire POST to update-schedule.js
+            const payload = {
+                action: 'update-workers',
+                date: date,
+                team_id: teamId,
+                assigned_workers: workers
+            };
+
+            fetch(API_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    showToast(`${teamId.replace('_', ' ')} updated for ${date}`, 'success');
+                    // Dispatch htmx event for any listeners
+                    document.body.dispatchEvent(new CustomEvent('htmx:afterRequest', { detail: { payload, response: data } }));
+                })
+                .catch(err => {
+                    console.error('POST error:', err);
+                    showToast(`Failed to save — ${err.message || 'Network error'}`, 'error');
+                });
+        }
+
+        // ─── Load Schedule from Server ────────────────────────────
+        async function loadScheduleData() {
+            try {
+                const res = await fetch(API_GET);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                scheduleData = await res.json();
+                renderAssignments();
+            } catch (err) {
+                console.error('Failed to load schedule:', err);
+                showToast('Failed to load schedule data', 'error');
+            }
+        }
+
+        // ─── Render Assignments from Data ─────────────────────────
+        function renderAssignments() {
+            Object.keys(scheduleData).forEach(date => {
+                TEAMS.forEach(teamId => {
+                    const zone = document.getElementById(`team-${teamId}-${date}`);
+                    if (!zone) return;
+                    const teamData = scheduleData[date][teamId];
+                    if (!teamData) return;
+
+                    const workers = teamData.assigned_workers || [];
+                    zone.innerHTML = '';
+
+                    workers.forEach(worker => {
+                        const pill = document.createElement('div');
+                        pill.dataset.worker = worker;
+                        stylePillForZone(pill, worker);
+                        zone.appendChild(pill);
+                    });
+
+                    // Render job/address cards below the worker pills
+                    renderJobCards(date, teamId, teamData);
+                });
+            });
+        }
+
+        // ─── Render Job Cards per Team ─────────────────────────────
+        function renderJobCards(date, teamId, teamData) {
+            const addresses = teamData.addresses || [];
+            if (addresses.length === 0) return;
+
+            // Find the parent team container (the rounded-lg border div wrapping header + drop zone)
+            const zone = document.getElementById(`team-${teamId}-${date}`);
+            if (!zone) return;
+            const teamContainer = zone.closest('.rounded-lg');
+            if (!teamContainer) return;
+
+            // Remove any previously rendered job-list to avoid duplicates on reload
+            const existing = teamContainer.querySelector('.job-list');
+            if (existing) existing.remove();
+
+            const jobList = document.createElement('div');
+            jobList.className = 'job-list border-t border-gray-200 divide-y divide-gray-100';
+
+            addresses.forEach((addr, idx) => {
+                const isCancelled = addr.status === 'cancelled';
+                const card = document.createElement('div');
+                card.className = `job-card px-3 py-2 flex items-center justify-between gap-2 ${isCancelled ? 'cancelled' : ''}`;
+                card.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                        <span class="job-address text-sm font-medium text-gray-800">
+                            ${addr.house_number} ${addr.street}
+                        </span>
+                        <span class="job-status-badge ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white
+                            ${isCancelled ? 'bg-gray-400' : addr.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}">
+                            ${addr.status || 'pending'}
+                        </span>
+                    </div>
+                    ${!isCancelled ? `
+                        <button onclick="cancelJob('${date}', '${teamId}', '${addr.id}')"
+                                class="shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                title="Cancel this job">
+                            ✕ Cancel
+                        </button>
+                    ` : `
+                        <span class="shrink-0 text-xs text-gray-400 italic">Cancelled</span>
+                    `}
+                `;
+                jobList.appendChild(card);
+            });
+
+            teamContainer.appendChild(jobList);
+        }
+
+        // ─── Cancel a Job (Soft Delete) ────────────────────────────
+        function cancelJob(date, teamId, jobId) {
+            if (!confirm('Cancel this job? It will be greyed out but preserved.')) return;
+
+            const payload = {
+                action: 'cancel-job',
+                date: date,
+                team_id: teamId,
+                job_id: jobId
+            };
+
+            fetch(API_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    showToast('Job cancelled successfully', 'success');
+                    loadScheduleData(); // Reload to reflect the change
+                })
+                .catch(err => {
+                    console.error('Cancel error:', err);
+                    showToast(`Failed to cancel — ${err.message || 'Network error'}`, 'error');
+                });
+        }
+
+        // ─── Clear All Assignments ────────────────────────────────
+        function clearAllAssignments() {
+            if (!confirm('Clear all worker assignments for this week?')) return;
+
+            const dates = getWeekDates().map(d => formatDate(d));
+            dates.forEach(date => {
+                TEAMS.forEach(teamId => {
+                    const zone = document.getElementById(`team-${teamId}-${date}`);
+                    if (zone) zone.innerHTML = '';
+                    syncTeamToServer(date, teamId);
+                });
+            });
+        }
+
+        // ─── Toast Notifications ──────────────────────────────────
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                warning: 'bg-amber-500',
+            };
+            const toast = document.createElement('div');
+            toast.className = `toast ${colors[type] || colors.success} text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium max-w-xs`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ─── Boot ─────────────────────────────────────────────────
+        init();
+    </script>
+</body>
+
+</html>

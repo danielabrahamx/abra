@@ -1,0 +1,108 @@
+{
+    "17-02-2026": {
+        "Team_A": {
+            "assigned_workers": [
+                "Amylea",
+                "Angelo"
+            ],
+            "addresses": [
+                {
+                    "id": "a1b2c3d4-e5f6-7890-abcd-111111111111",
+                    "street": "Main Street",
+                    "house_number": "42",
+                    "status": "pending",
+                    "maps_url": "https://www.google.com/maps/search/?api=1&query=42%20Main%20Street"
+                },
+                {
+                    "id": "a1b2c3d4-e5f6-7890-abcd-222222222222",
+                    "street": "Oak Avenue",
+                    "house_number": "15",
+                    "status": "cancelled",
+                    "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
+                }
+            ]
+        },
+        "Team_B": {
+            "assigned_workers": [
+                "Chloe"
+            ],
+            "addresses": [
+                {
+                    "id": "a1b2c3d4-e5f6-7890-abcd-333333333333",
+                    "street": "Elm Road",
+                    "house_number": "7",
+                    "status": "pending",
+                    "maps_url": "https://www.google.com/maps/search/?api=1&query=7%20Elm%20Road"
+                }
+            ]
+        }
+    },
+    "18-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": [
+                {
+                    "id": "a1b2c3d4-e5f6-7890-abcd-444444444444",
+                    "street": "Pine Lane",
+                    "house_number": "99",
+                    "status": "completed",
+                    "maps_url": "https://www.google.com/maps/search/?api=1&query=99%20Pine%20Lane"
+                }
+            ]
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    },
+    "19-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": []
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    },
+    "20-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": []
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    },
+    "21-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": []
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    },
+    "22-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": []
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    },
+    "23-02-2026": {
+        "Team_A": {
+            "assigned_workers": [],
+            "addresses": []
+        },
+        "Team_B": {
+            "assigned_workers": [],
+            "addresses": []
+        }
+    }
+}

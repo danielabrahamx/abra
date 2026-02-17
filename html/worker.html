@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker View - Schedule</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* High contrast custom styles for outdoor visibility */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .worker-badge {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ensure minimum touch target sizes */
+        .touch-target {
+            min-height: 48px;
+            min-width: 48px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Cancelled job styling */
+        .job-cancelled {
+            opacity: 0.5;
+        }
+
+        .job-cancelled .job-address-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg sticky top-0 z-10">
+        <div class="px-4 py-4">
+            <h1 class="text-2xl font-bold">Worker Schedule</h1>
+            <p class="text-blue-100 text-sm mt-1" id="currentDate">Loading...</p>
+        </div>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="flex flex-col items-center justify-center py-12">
+        <div class="spinner"></div>
+        <p class="text-white text-lg mt-4">Loading schedule...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden px-4 py-8">
+        <div class="bg-red-600 text-white p-6 rounded-lg card-shadow max-w-md mx-auto">
+            <h2 class="text-xl font-bold mb-2">Error Loading Schedule</h2>
+            <p id="errorMessage" class="text-sm"></p>
+            <button onclick="loadSchedule()"
+                class="mt-4 bg-white text-red-600 px-6 py-3 rounded-lg font-bold touch-target hover:bg-red-50 active:bg-red-100">
+                Retry
+            </button>
+        </div>
+    </div>
+
+    <!-- Schedule Container -->
+    <div id="scheduleContainer" class="hidden px-4 py-6 space-y-4 max-w-2xl mx-auto">
+        <!-- Schedule cards will be inserted here -->
+    </div>
+
+    <!-- Refresh Button (Fixed at bottom) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent p-4">
+        <button onclick="loadSchedule()"
+            class="w-full max-w-2xl mx-auto block bg-blue-600 text-white px-6 py-4 rounded-lg font-bold text-lg touch-target hover:bg-blue-700 active:bg-blue-800 shadow-lg">
+            Refresh Schedule
+        </button>
+    </div>
+
+    <script>
+        // Worker roster
+        const WORKER_ROSTER = [
+            'Amylea',
+            'Angelo',
+            'Chloe',
+            'George',
+            'Leeroy',
+            'Myka',
+            'Nathan',
+            'Olivia'
+        ];
+
+        // Update current date display
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Format date string (DD-MM-YYYY) to readable format
+        function formatDate(dateStr) {
+            const [day, month, year] = dateStr.split('-');
+            const date = new Date(year, month - 1, day);
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Check if date is today
+        function isToday(dateStr) {
+            const [day, month, year] = dateStr.split('-');
+            const date = new Date(year, month - 1, day);
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        // Load schedule data
+        async function loadSchedule() {
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+            const scheduleContainer = document.getElementById('scheduleContainer');
+
+            // Show loading state
+            loadingState.classList.remove('hidden');
+            errorState.classList.add('hidden');
+            scheduleContainer.classList.add('hidden');
+
+            try {
+                // Fetch schedule data
+                // In production: const response = await fetch('/.netlify/functions/get-schedule');
+                // For local testing:
+                const response = await fetch('../data/schedule.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const schedule = await response.json();
+
+                // Hide loading, show schedule
+                loadingState.classList.add('hidden');
+                scheduleContainer.classList.remove('hidden');
+
+                // Render schedule
+                renderSchedule(schedule);
+
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+
+                // Show error state
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+
+        // Build Google Maps URL using URI-encoded address
+        function buildMapsURL(street, houseNumber) {
+            const address = `${houseNumber} ${street}`;
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+        }
+
+        // Render schedule cards
+        function renderSchedule(schedule) {
+            const container = document.getElementById('scheduleContainer');
+            const dates = Object.keys(schedule).sort();
+
+            let html = '';
+
+            dates.forEach(dateKey => {
+                const dayData = schedule[dateKey];
+                const teams = Object.keys(dayData);
+                const todayClass = isToday(dateKey) ? 'ring-4 ring-yellow-400' : '';
+
+                // Create a card for this date
+                html += `
+          <div class="bg-white rounded-lg card-shadow overflow-hidden ${todayClass}">
+            <!-- Date Header -->
+            <div class="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-4 py-3">
+              <h2 class="text-xl font-bold">
+                ${formatDate(dateKey)}
+                ${isToday(dateKey) ? '<span class="ml-2 bg-yellow-400 text-gray-900 px-2 py-1 rounded text-sm">TODAY</span>' : ''}
+              </h2>
+            </div>
+            
+            <!-- Teams -->
+            <div class="divide-y divide-gray-200">
+        `;
+
+                teams.forEach(teamName => {
+                    const team = dayData[teamName];
+                    const workers = team.assigned_workers || [];
+                    const addresses = team.addresses || [];
+
+                    html += `
+            <div class="p-4">
+              <!-- Team Name -->
+              <h3 class="text-lg font-bold text-gray-900 mb-3">${teamName}</h3>
+              
+              <!-- Assigned Workers -->
+              <div class="mb-3">
+                <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Assigned Workers:</p>
+                <div class="flex flex-wrap gap-2">
+          `;
+
+                    if (workers.length > 0) {
+                        workers.forEach(worker => {
+                            html += `
+                <span class="worker-badge bg-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-bold">
+                  ${worker}
+                </span>
+              `;
+                        });
+                    } else {
+                        html += `
+              <span class="bg-gray-300 text-gray-700 px-3 py-1.5 rounded-full text-sm font-medium italic">
+                No workers assigned
+              </span>
+            `;
+                    }
+
+                    html += `
+                </div>
+              </div>
+              
+              <!-- Addresses Section -->
+              <div class="mt-4">
+                <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Addresses (${addresses.length}):</p>
+          `;
+
+                    if (addresses.length > 0) {
+                        addresses.forEach((address, index) => {
+                            const status = address.status || 'pending';
+                            const isCancelled = status === 'cancelled';
+                            const statusColors = {
+                                pending: 'bg-yellow-100 border-yellow-300 text-yellow-800',
+                                completed: 'bg-green-100 border-green-300 text-green-800',
+                                cancelled: 'bg-gray-100 border-gray-300 text-gray-500'
+                            };
+                            const statusColor = statusColors[status] || statusColors.pending;
+                            const mapsURL = buildMapsURL(address.street, address.house_number);
+
+                            html += `
+                <div class="${isCancelled ? 'job-cancelled' : ''} bg-white border-2 ${statusColor} rounded-lg p-4 mb-3 card-shadow">
+                  <!-- Address Number Badge -->
+                  <div class="flex items-start justify-between mb-2">
+                    <span class="bg-gray-800 text-white px-2 py-1 rounded text-xs font-bold">
+                      #${index + 1}
+                    </span>
+                    <span class="px-2 py-1 rounded text-xs font-bold uppercase ${isCancelled ? 'bg-gray-400 text-white line-through' : ''}">
+                      ${status}
+                    </span>
+                  </div>
+                  
+                  <!-- Address Details -->
+                  <div class="mb-3">
+                    <p class="job-address-text text-lg font-bold text-gray-900">
+                      ${address.house_number} ${address.street}
+                    </p>
+                  </div>
+                  
+                  <!-- Launch Navigation Button (hidden for cancelled) -->
+                  ${!isCancelled ? `
+                  <a href="${mapsURL}" 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     class="block w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-center font-bold rounded-lg touch-target px-4 py-3 transition-colors">
+                    🗺️ Launch Navigation
+                  </a>
+                  ` : `
+                  <div class="block w-full bg-gray-300 text-gray-500 text-center font-bold rounded-lg px-4 py-3 cursor-not-allowed">
+                    ✕ Cancelled
+                  </div>
+                  `}
+                </div>
+              `;
+                        });
+                    } else {
+                        html += `
+                <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 text-center">
+                  <p class="text-gray-600 text-sm italic">No addresses assigned</p>
+                </div>
+              `;
+                    }
+
+                    html += `
+              </div>
+            </div>
+          `;
+                });
+
+                html += `
+            </div>
+          </div>
+        `;
+            });
+
+            // Add bottom padding for fixed button
+            html += '<div class="h-24"></div>';
+
+            container.innerHTML = html;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCurrentDate();
+            loadSchedule();
+
+            // Auto-refresh every 60 seconds when page is visible
+            setInterval(() => {
+                if (!document.hidden) {
+                    loadSchedule();
+                }
+            }, 60000);
+
+            // Immediately reload when tab becomes visible again
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    loadSchedule();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

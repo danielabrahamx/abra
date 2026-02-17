@@ -1,0 +1,30 @@
+# Netlify configuration for Abra MVP
+
+[build]
+  # No build step required — static HTML + Netlify Functions
+  publish = "html"
+  functions = "functions"
+
+# Redirect API calls to Netlify Functions
+[[redirects]]
+  from = "/api/get-schedule"
+  to = "/.netlify/functions/get-schedule"
+  status = 200
+
+[[redirects]]
+  from = "/api/update-schedule"
+  to = "/.netlify/functions/update-schedule"
+  status = 200
+
+# Custom headers for security and caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
