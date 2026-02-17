@@ -30,7 +30,8 @@ function getGitHubConfig() {
  */
 async function readJSON(path) {
     const { owner, repo, branch, token } = getGitHubConfig();
-    const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+    // Add timestamp to prevent caching
+    const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}&t=${Date.now()}`;
 
     console.log(`Reading from GitHub: ${path}`);
 
@@ -70,19 +71,25 @@ async function writeJSON(path, content, message = 'Update data') {
     // First, get the current file SHA (required for updates)
     let sha = null;
     try {
-        const getResponse = await fetch(`${url}?ref=${branch}`, {
+        // Add timestamp to prevent caching on GET
+        const getUrl = `${url}?ref=${branch}&t=${Date.now()}`;
+        const getResponse = await fetch(getUrl, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
                 'User-Agent': 'Netlify-Function'
             }
         });
+
         if (getResponse.ok) {
             const fileData = await getResponse.json();
             sha = fileData.sha;
+            console.log(`File exists, SHA: ${sha}`);
+        } else {
+            console.log(`File check status: ${getResponse.status}`);
         }
     } catch (err) {
-        console.log('File does not exist yet, will create new');
+        console.log('Error checking file existence:', err);
     }
 
     // Write the file
@@ -109,6 +116,7 @@ async function writeJSON(path, content, message = 'Update data') {
 
     if (!putResponse.ok) {
         const errorText = await putResponse.text();
+        console.error(`GitHub API write error: ${putResponse.status}`, errorText);
         throw new Error(`GitHub API write error: ${putResponse.status} - ${errorText}`);
     }
 

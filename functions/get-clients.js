@@ -28,7 +28,8 @@ exports.handler = async (event, context) => {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
             },
             body: JSON.stringify(clients || [])
         };
