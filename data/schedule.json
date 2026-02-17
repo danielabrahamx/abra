@@ -609,7 +609,9 @@
   },
   "16-02-2026": {
     "Team_A": {
-      "assigned_workers": [],
+      "assigned_workers": [
+        "Amylea"
+      ],
       "addresses": [
         {
           "id": "014b79cc-1fe5-435d-8d11-754d5adcdb3d",
