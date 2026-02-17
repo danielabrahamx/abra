@@ -1,0 +1,13 @@
+# Sensitive data - keep local only
+data/clients.json
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
