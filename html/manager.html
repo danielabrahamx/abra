@@ -412,6 +412,8 @@
                                                     <option value="__new__">+ Add New Address</option>
                                                 </select>
                                                 <div class="manual-address-fields hidden">
+                                                    <input type="text" name="client_name" placeholder="Name (e.g. Helen)"
+                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
                                                     <input type="text" name="street" placeholder="Street"
                                                            class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
                                                     <input type="text" name="house_number" placeholder="House #"
@@ -420,7 +422,7 @@
                                                 <button type="button"
                                                         class="quick-add-submit w-full mt-1 px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                                                         data-date="${dateKey}" data-team="${teamId}">
-                                                    Create Job
+                                                    Add & Save
                                                 </button>
                                             </div>
                                         </div>
@@ -517,7 +519,8 @@
         }
 
         // ─── Add New Job ──────────────────────────────────────────
-        function addNewJob(date, teamId, select, formContainer) {
+        // ─── Add New Job (Save Client & Schedule) ────────────────
+        async function addNewJob(date, teamId, select, formContainer) {
             const selectedValue = select.value;
             let street, houseNumber, clientName, notes;
 
@@ -526,67 +529,89 @@
                 return;
             }
 
-            if (selectedValue === '__new__') {
-                // Manual input mode
-                const streetInput = formContainer.querySelector('input[name="street"]');
-                const houseInput = formContainer.querySelector('input[name="house_number"]');
-                street = streetInput ? streetInput.value.trim() : '';
-                houseNumber = houseInput ? houseInput.value.trim() : '';
-                if (!street || !houseNumber) {
-                    showToast('Please fill in both Street and House #', 'warning');
-                    return;
-                }
-            } else {
-                // Saved client mode
-                const client = clientsData.find(c => c.id === selectedValue);
-                if (!client) {
-                    showToast('Client not found', 'error');
-                    return;
-                }
-                street = client.street;
-                houseNumber = client.house_number;
-                clientName = client.name;
-                notes = client.notes;
-            }
+            try {
+                if (selectedValue === '__new__') {
+                    // Manual input mode -> Create Client FIRST
+                    const nameInput = formContainer.querySelector('input[name="client_name"]');
+                    const streetInput = formContainer.querySelector('input[name="street"]');
+                    const houseInput = formContainer.querySelector('input[name="house_number"]');
 
-            const addressPayload = { street, house_number: houseNumber };
-            if (clientName) addressPayload.client_name = clientName;
-            if (notes) addressPayload.notes = notes;
+                    clientName = nameInput ? nameInput.value.trim() : '';
+                    street = streetInput ? streetInput.value.trim() : '';
+                    houseNumber = houseInput ? houseInput.value.trim() : '';
 
-            const payload = {
-                action: 'add-job',
-                date: date,
-                team_id: teamId,
-                address: addressPayload
-            };
-
-            fetch(API_POST, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return res.json();
-                })
-                .then(data => {
-                    showToast(`Job added: ${houseNumber} ${street}`, 'success');
-                    // Reset the form
-                    select.value = '';
-                    const manualFields = formContainer.querySelector('.manual-address-fields');
-                    if (manualFields) {
-                        manualFields.classList.add('hidden');
-                        manualFields.querySelectorAll('input').forEach(i => i.value = '');
+                    if (!clientName || !street || !houseNumber) {
+                        showToast('Name, Street, and House # are required to save', 'warning');
+                        return;
                     }
-                    formContainer.classList.remove('open');
-                    const toggle = formContainer.parentElement.querySelector('.quick-add-toggle');
-                    if (toggle) toggle.textContent = '+ Add Address';
-                    loadScheduleData();
-                })
-                .catch(err => {
-                    console.error('Add job error:', err);
-                    showToast(`Failed to add job — ${err.message || 'Network error'}`, 'error');
+
+                    // 1. Save the new client
+                    const saveRes = await fetch(API_POST, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'add-client',
+                            name: clientName,
+                            street: street,
+                            house_number: houseNumber
+                        })
+                    });
+
+                    if (!saveRes.ok) throw new Error(`Failed to save client: ${saveRes.status}`);
+
+                    // 2. Reload clients so it appears in dropdowns immediately
+                    await loadClients();
+                    renderScheduleGrid(); // Re-render to update dropdowns
+
+                    showToast(`Client "${clientName}" saved!`, 'success');
+
+                    // Proceed to add to schedule
+                } else {
+                    // Saved client mode
+                    const client = clientsData.find(c => c.id === selectedValue);
+                    if (!client) {
+                        showToast('Client not found', 'error');
+                        return;
+                    }
+                    street = client.street;
+                    houseNumber = client.house_number;
+                    clientName = client.name;
+                    notes = client.notes;
+                }
+
+                // 3. Add to Schedule
+                const addressPayload = { street, house_number: houseNumber };
+                if (clientName) addressPayload.client_name = clientName;
+                if (notes) addressPayload.notes = notes;
+
+                const payload = {
+                    action: 'add-job',
+                    date: date,
+                    team_id: teamId,
+                    address: addressPayload
+                };
+
+                const res = await fetch(API_POST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                showToast(`Address added to schedule`, 'success');
+
+                // Cleanup UI
+                loadScheduleData(); // Refresh the grid
+
+                // Close the form if still open/finding element
+                // Note: re-rendering grid might have destroyed the form element reference
+                // but we reload data anyway so it's fine.
+
+            } catch (err) {
+                console.error('Add job error:', err);
+                showToast(`Failed — ${err.message || 'Network error'}`, 'error');
+            }
         }
 
         // ─── Style a pill for inside the team drop zone ───────────
