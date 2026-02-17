@@ -152,10 +152,8 @@
             scheduleContainer.classList.add('hidden');
 
             try {
-                // Fetch schedule data
-                // In production: const response = await fetch('/.netlify/functions/get-schedule');
-                // For local testing:
-                const response = await fetch('../data/schedule.json');
+                // Fetch schedule data via Netlify Functions redirect
+                const response = await fetch('/api/get-schedule');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

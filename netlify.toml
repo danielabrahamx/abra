@@ -5,6 +5,9 @@
   publish = "html"
   functions = "functions"
 
+[functions]
+  included_files = ["data/**"]
+
 # Redirect API calls to Netlify Functions
 [[redirects]]
   from = "/api/get-schedule"

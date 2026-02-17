@@ -191,11 +191,9 @@
         const WORKERS = ['Amylea', 'Angelo', 'Chloe', 'George', 'Leeroy', 'Myka', 'Nathan', 'Olivia'];
         const TEAMS = ['Team_A', 'Team_B'];
 
-        // API endpoints – swap comments for production vs local dev
-        // const API_GET  = '/.netlify/functions/get-schedule';
-        // const API_POST = '/.netlify/functions/update-schedule';
-        const API_GET = '../data/schedule.json';
-        const API_POST = '/.netlify/functions/update-schedule';
+        // API endpoints — routed via netlify.toml redirects
+        const API_GET = '/api/get-schedule';
+        const API_POST = '/api/update-schedule';
 
         // Worker pill color map for visual distinction
         const WORKER_COLORS = {
