@@ -9,13 +9,6 @@
           "house_number": "42",
           "status": "cancelled",
           "maps_url": "https://www.google.com/maps/search/?api=1&query=42%20Main%20Street"
-        },
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-222222222222",
-          "street": "Oak Avenue",
-          "house_number": "15",
-          "status": "cancelled",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
         }
       ]
     },
