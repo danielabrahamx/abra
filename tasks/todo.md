@@ -34,6 +34,7 @@
 - [x] Add 'Time Interval' field to Quick Add and Job Cards (Manager & Worker views)
 - [x] Implement Hard Delete for jobs
 - [x] Fix 'Clear All Assignments' race condition with batched API endpoint
+- [x] Add PIN protection (3333) to Manager View access on homepage
 
 ## Testing & Verification
 - [x] Validate all HTMX targets use CSS IDs
