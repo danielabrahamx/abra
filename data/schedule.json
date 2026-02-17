@@ -19,6 +19,13 @@
                     "house_number": "15",
                     "status": "cancelled",
                     "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
+                },
+                {
+                    "id": "749e850a-b7a8-4b0c-8c9d-c52aa8f53bba",
+                    "street": "Test Street",
+                    "house_number": "123",
+                    "status": "pending",
+                    "maps_url": "https://www.google.com/maps/search/?api=1&query=123%20Test%20Street"
                 }
             ]
         },

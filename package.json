@@ -1,0 +1,7 @@
+{
+    "name": "abra-schedule-manager",
+    "version": "1.0.0",
+    "description": "Weekly schedule manager for Abra team",
+    "type": "commonjs",
+    "private": true
+}
