@@ -1,9 +1,9 @@
 [
-    {
-        "id": "client-001-helen",
-        "name": "Helen",
-        "street": "Elm Tree Close",
-        "house_number": "5",
-        "notes": "Hassocks"
-    }
+  {
+    "id": "client-001-helen",
+    "name": "Helen",
+    "street": "Elm Tree Close",
+    "house_number": "5",
+    "notes": "Hassocks"
+  }
 ]
