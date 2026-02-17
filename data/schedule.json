@@ -8,15 +8,7 @@
       "assigned_workers": [
         "Chloe"
       ],
-      "addresses": [
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-333333333333",
-          "street": "Elm Road",
-          "house_number": "7",
-          "status": "pending",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=7%20Elm%20Road"
-        }
-      ]
+      "addresses": []
     }
   },
   "18-02-2026": {
