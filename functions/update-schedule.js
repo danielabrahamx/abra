@@ -9,8 +9,9 @@ const fs = require('fs');
 const path = require('path');
 const { generateUUID, buildMapsURL, WORKER_ROSTER } = require('./lib/utils');
 
-// Path to schedule.json
+// Path to data files
 const SCHEDULE_PATH = path.join(__dirname, '..', 'data', 'schedule.json');
+const CLIENTS_PATH = path.join(__dirname, '..', 'data', 'clients.json');
 
 // Valid status values from Data Dictionary
 const VALID_STATUSES = ['pending', 'completed', 'cancelled'];
@@ -83,6 +84,35 @@ function validateAddress(address) {
     }
 
     return { valid: true };
+}
+
+/**
+ * Read clients from file
+ * @returns {Array} Clients array
+ */
+function readClients() {
+    try {
+        if (!fs.existsSync(CLIENTS_PATH)) return [];
+        const data = fs.readFileSync(CLIENTS_PATH, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading clients:', error);
+        throw new Error('Failed to read clients data');
+    }
+}
+
+/**
+ * Write clients to file
+ * @param {Array} clients - Clients array to write
+ */
+function writeClients(clients) {
+    try {
+        const data = JSON.stringify(clients, null, 4);
+        fs.writeFileSync(CLIENTS_PATH, data, 'utf8');
+    } catch (error) {
+        console.error('Error writing clients:', error);
+        throw new Error('Failed to write clients data');
+    }
 }
 
 /**
@@ -159,6 +189,10 @@ function addJob(date, teamId, address, selectedWorkers) {
         status: address.status || 'pending', // Default to 'pending'
         maps_url: buildMapsURL(address.street, address.house_number)
     };
+
+    // Attach client info when job is created from a saved client
+    if (address.client_name) job.client_name = address.client_name;
+    if (address.notes) job.notes = address.notes;
 
     // Add job to addresses array
     schedule[date][teamId].addresses.push(job);
@@ -408,6 +442,60 @@ exports.handler = async (event) => {
                     body: JSON.stringify({ error: err.message })
                 };
             }
+        }
+
+        // ─── ACTION: add-client ──────────────────────────────────
+        if (action === 'add-client') {
+            const { name, street, house_number, notes } = body;
+
+            if (!name || typeof name !== 'string' || !name.trim()) {
+                return { statusCode: 400, body: JSON.stringify({ error: 'Client "name" is required.' }) };
+            }
+            if (!street || typeof street !== 'string' || !street.trim()) {
+                return { statusCode: 400, body: JSON.stringify({ error: 'Client "street" is required.' }) };
+            }
+            if (!house_number || typeof house_number !== 'string' || !house_number.trim()) {
+                return { statusCode: 400, body: JSON.stringify({ error: 'Client "house_number" is required.' }) };
+            }
+
+            const clients = readClients();
+            const newClient = {
+                id: generateUUID(),
+                name: name.trim(),
+                street: street.trim(),
+                house_number: house_number.trim(),
+                notes: (notes && typeof notes === 'string') ? notes.trim() : ''
+            };
+            clients.push(newClient);
+            writeClients(clients);
+
+            return {
+                statusCode: 201,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ message: 'Client added successfully', client: newClient })
+            };
+        }
+
+        // ─── ACTION: delete-client ───────────────────────────────
+        if (action === 'delete-client') {
+            const { client_id } = body;
+            if (!client_id || typeof client_id !== 'string') {
+                return { statusCode: 400, body: JSON.stringify({ error: 'Missing or invalid "client_id".' }) };
+            }
+
+            const clients = readClients();
+            const idx = clients.findIndex(c => c.id === client_id);
+            if (idx === -1) {
+                return { statusCode: 404, body: JSON.stringify({ error: `Client "${client_id}" not found.` }) };
+            }
+            const removed = clients.splice(idx, 1)[0];
+            writeClients(clients);
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ message: 'Client deleted successfully', client: removed })
+            };
         }
 
         // ─── ACTION: add-job (default) ────────────────────────────

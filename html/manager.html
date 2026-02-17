@@ -148,7 +148,11 @@
             <div id="worker-roster" class="p-4 space-y-2 overflow-y-auto flex-1">
                 <!-- Worker pills rendered by JS -->
             </div>
-            <div class="p-4 border-t border-gray-200 bg-gray-50">
+            <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-2">
+                <button id="btn-manage-clients"
+                    class="w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    Manage Clients
+                </button>
                 <button id="btn-clear-all"
                     class="w-full px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
                     Clear All Assignments
@@ -191,6 +195,45 @@
         </main>
     </div>
 
+    <!-- Manage Clients Modal -->
+    <div id="clients-modal" class="hidden fixed inset-0 z-40">
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeClientsModal()"></div>
+        <div
+            class="absolute inset-4 md:inset-y-8 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden z-50">
+            <!-- Modal Header -->
+            <div
+                class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-between">
+                <h2 class="text-lg font-bold">Manage Clients</h2>
+                <button onclick="closeClientsModal()"
+                    class="text-white hover:bg-white hover:bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl">&times;</button>
+            </div>
+            <!-- Client List -->
+            <div id="clients-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <p class="text-gray-400 text-sm italic text-center py-4">No clients yet</p>
+            </div>
+            <!-- Add New Client Form -->
+            <div class="border-t border-gray-200 p-4 bg-gray-50">
+                <h3 class="text-sm font-bold text-gray-700 mb-3">Add New Client</h3>
+                <div class="space-y-2">
+                    <input id="new-client-name" type="text" placeholder="Client Name *"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                    <div class="flex gap-2">
+                        <input id="new-client-street" type="text" placeholder="Street *"
+                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                        <input id="new-client-house" type="text" placeholder="House # *"
+                            class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                    </div>
+                    <input id="new-client-notes" type="text" placeholder="Notes (optional)"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                    <button onclick="addClient()"
+                        class="w-full px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                        Save Client
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
@@ -218,18 +261,34 @@
         let currentWeekOffset = 0;
         let scheduleData = {};
         let sortableInstances = [];
+        let clientsData = [];
 
         // ─── Init ─────────────────────────────────────────────────
         function init() {
             renderWorkerRoster();
-            renderScheduleGrid();
-            loadScheduleData();
+            loadClients().then(() => {
+                renderScheduleGrid();
+                loadScheduleData();
+            });
 
             // Button listeners
             document.getElementById('btn-prev-week').addEventListener('click', () => { currentWeekOffset--; renderScheduleGrid(); loadScheduleData(); });
             document.getElementById('btn-today').addEventListener('click', () => { currentWeekOffset = 0; renderScheduleGrid(); loadScheduleData(); });
             document.getElementById('btn-next-week').addEventListener('click', () => { currentWeekOffset++; renderScheduleGrid(); loadScheduleData(); });
             document.getElementById('btn-clear-all').addEventListener('click', clearAllAssignments);
+            document.getElementById('btn-manage-clients').addEventListener('click', openClientsModal);
+        }
+
+        // ─── Load Clients ─────────────────────────────────────────
+        async function loadClients() {
+            try {
+                const res = await fetch('/api/get-clients');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                clientsData = await res.json();
+            } catch (err) {
+                console.error('Failed to load clients:', err);
+                clientsData = [];
+            }
         }
 
         // ─── Roster Sidebar ───────────────────────────────────────
@@ -345,12 +404,21 @@
                                                 + Add Address
                                             </button>
                                             <div class="quick-add-fields px-3" data-date="${dateKey}" data-team="${teamId}">
-                                                <input type="text" name="street" placeholder="Street"
-                                                       class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
-                                                <input type="text" name="house_number" placeholder="House #"
-                                                       class="w-full mb-1.5 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                                                <select name="client-select"
+                                                        class="client-select w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white"
+                                                        data-date="${dateKey}" data-team="${teamId}">
+                                                    <option value="" disabled selected>Select a client...</option>
+                                                    ${clientsData.map(c => `<option value="${c.id}">${c.name} — ${c.house_number} ${c.street}</option>`).join('')}
+                                                    <option value="__new__">+ Add New Address</option>
+                                                </select>
+                                                <div class="manual-address-fields hidden">
+                                                    <input type="text" name="street" placeholder="Street"
+                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                                                    <input type="text" name="house_number" placeholder="House #"
+                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                                                </div>
                                                 <button type="button"
-                                                        class="quick-add-submit w-full px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                                                        class="quick-add-submit w-full mt-1 px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                                                         data-date="${dateKey}" data-team="${teamId}">
                                                     Create Job
                                                 </button>
@@ -418,11 +486,21 @@
             // Toggle buttons
             document.querySelectorAll('.quick-add-toggle').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const date = btn.dataset.date;
-                    const team = btn.dataset.team;
                     const fields = btn.parentElement.querySelector('.quick-add-fields');
                     fields.classList.toggle('open');
                     btn.textContent = fields.classList.contains('open') ? 'Close' : '+ Add Address';
+                });
+            });
+
+            // Client dropdown change — show/hide manual fields
+            document.querySelectorAll('.client-select').forEach(sel => {
+                sel.addEventListener('change', () => {
+                    const manualFields = sel.closest('.quick-add-fields').querySelector('.manual-address-fields');
+                    if (sel.value === '__new__') {
+                        manualFields.classList.remove('hidden');
+                    } else {
+                        manualFields.classList.add('hidden');
+                    }
                 });
             });
 
@@ -432,31 +510,54 @@
                     const date = btn.dataset.date;
                     const team = btn.dataset.team;
                     const container = btn.closest('.quick-add-fields');
-                    const streetInput = container.querySelector('input[name="street"]');
-                    const houseInput = container.querySelector('input[name="house_number"]');
-                    addNewJob(date, team, streetInput, houseInput, container);
+                    const select = container.querySelector('.client-select');
+                    addNewJob(date, team, select, container);
                 });
             });
         }
 
         // ─── Add New Job ──────────────────────────────────────────
-        function addNewJob(date, teamId, streetInput, houseInput, formContainer) {
-            const street = streetInput.value.trim();
-            const houseNumber = houseInput.value.trim();
+        function addNewJob(date, teamId, select, formContainer) {
+            const selectedValue = select.value;
+            let street, houseNumber, clientName, notes;
 
-            if (!street || !houseNumber) {
-                showToast('Please fill in both Street and House #', 'warning');
+            if (!selectedValue) {
+                showToast('Please select a client or "+ Add New Address"', 'warning');
                 return;
             }
+
+            if (selectedValue === '__new__') {
+                // Manual input mode
+                const streetInput = formContainer.querySelector('input[name="street"]');
+                const houseInput = formContainer.querySelector('input[name="house_number"]');
+                street = streetInput ? streetInput.value.trim() : '';
+                houseNumber = houseInput ? houseInput.value.trim() : '';
+                if (!street || !houseNumber) {
+                    showToast('Please fill in both Street and House #', 'warning');
+                    return;
+                }
+            } else {
+                // Saved client mode
+                const client = clientsData.find(c => c.id === selectedValue);
+                if (!client) {
+                    showToast('Client not found', 'error');
+                    return;
+                }
+                street = client.street;
+                houseNumber = client.house_number;
+                clientName = client.name;
+                notes = client.notes;
+            }
+
+            const addressPayload = { street, house_number: houseNumber };
+            if (clientName) addressPayload.client_name = clientName;
+            if (notes) addressPayload.notes = notes;
 
             const payload = {
                 action: 'add-job',
                 date: date,
                 team_id: teamId,
-                address: {
-                    street: street,
-                    house_number: houseNumber
-                }
+                address: addressPayload
             };
 
             fetch(API_POST, {
@@ -470,14 +571,16 @@
                 })
                 .then(data => {
                     showToast(`Job added: ${houseNumber} ${street}`, 'success');
-                    // Clear the form
-                    streetInput.value = '';
-                    houseInput.value = '';
+                    // Reset the form
+                    select.value = '';
+                    const manualFields = formContainer.querySelector('.manual-address-fields');
+                    if (manualFields) {
+                        manualFields.classList.add('hidden');
+                        manualFields.querySelectorAll('input').forEach(i => i.value = '');
+                    }
                     formContainer.classList.remove('open');
-                    // Find and reset the toggle button text
                     const toggle = formContainer.parentElement.querySelector('.quick-add-toggle');
                     if (toggle) toggle.textContent = '+ Add Address';
-                    // Reload to show the new job card
                     loadScheduleData();
                 })
                 .catch(err => {
@@ -609,6 +712,7 @@
                 card.className = `job-card px-3 py-2 flex items-center justify-between gap-2 ${isCancelled ? 'cancelled' : ''}`;
                 card.innerHTML = `
                     <div class="flex-1 min-w-0">
+                        ${addr.client_name ? `<span class="text-xs font-bold text-blue-600 block">${addr.client_name}</span>` : ''}
                         <span class="job-address text-sm font-medium text-gray-800">
                             ${addr.house_number} ${addr.street}
                         </span>
@@ -690,6 +794,101 @@
             toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ─── Manage Clients Modal ────────────────────────────────
+        function openClientsModal() {
+            document.getElementById('clients-modal').classList.remove('hidden');
+            renderClientsModal();
+        }
+
+        function closeClientsModal() {
+            document.getElementById('clients-modal').classList.add('hidden');
+        }
+
+        function renderClientsModal() {
+            const list = document.getElementById('clients-list');
+            if (clientsData.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-sm italic text-center py-4">No clients yet. Add one below.</p>';
+                return;
+            }
+            list.innerHTML = clientsData.map(c => `
+                <div class="flex items-start justify-between bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-900">${c.name}</p>
+                        <p class="text-xs text-gray-600">${c.house_number} ${c.street}</p>
+                        ${c.notes ? `<p class="text-xs text-gray-400 italic mt-1">${c.notes}</p>` : ''}
+                    </div>
+                    <button onclick="deleteClient('${c.id}')" class="ml-2 shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors" title="Delete client">
+                        Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function addClient() {
+            const nameEl = document.getElementById('new-client-name');
+            const streetEl = document.getElementById('new-client-street');
+            const houseEl = document.getElementById('new-client-house');
+            const notesEl = document.getElementById('new-client-notes');
+
+            const name = nameEl.value.trim();
+            const street = streetEl.value.trim();
+            const house_number = houseEl.value.trim();
+            const notes = notesEl.value.trim();
+
+            if (!name || !street || !house_number) {
+                showToast('Name, Street, and House # are required', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_POST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add-client', name, street, house_number, notes })
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                showToast(`Client "${name}" added`, 'success');
+
+                // Clear inputs
+                nameEl.value = '';
+                streetEl.value = '';
+                houseEl.value = '';
+                notesEl.value = '';
+
+                // Refresh clients and re-render
+                await loadClients();
+                renderClientsModal();
+                renderScheduleGrid();
+                loadScheduleData();
+            } catch (err) {
+                console.error('Add client error:', err);
+                showToast(`Failed to add client — ${err.message}`, 'error');
+            }
+        }
+
+        async function deleteClient(clientId) {
+            if (!confirm('Delete this client? This will not affect existing jobs.')) return;
+
+            try {
+                const res = await fetch(API_POST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-client', client_id: clientId })
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                showToast('Client deleted', 'success');
+
+                await loadClients();
+                renderClientsModal();
+                renderScheduleGrid();
+                loadScheduleData();
+            } catch (err) {
+                console.error('Delete client error:', err);
+                showToast(`Failed to delete client — ${err.message}`, 'error');
+            }
         }
 
         // ─── Boot ─────────────────────────────────────────────────

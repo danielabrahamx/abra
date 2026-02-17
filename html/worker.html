@@ -280,9 +280,11 @@
                   
                   <!-- Address Details -->
                   <div class="mb-3">
+                    ${address.client_name ? `<p class="text-sm font-bold text-blue-700 mb-0.5">${address.client_name}</p>` : ''}
                     <p class="job-address-text text-lg font-bold text-gray-900">
                       ${address.house_number} ${address.street}
                     </p>
+                    ${address.notes ? `<p class="text-xs text-gray-500 italic mt-1">${address.notes}</p>` : ''}
                   </div>
                   
                   <!-- Launch Navigation Button (hidden for cancelled) -->

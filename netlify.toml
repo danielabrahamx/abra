@@ -19,6 +19,11 @@
   to = "/.netlify/functions/update-schedule"
   status = 200
 
+[[redirects]]
+  from = "/api/get-clients"
+  to = "/.netlify/functions/get-clients"
+  status = 200
+
 # Custom headers for security and caching
 [[headers]]
   for = "/*"
