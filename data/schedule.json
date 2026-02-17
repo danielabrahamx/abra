@@ -2,43 +2,11 @@
   "17-02-2026": {
     "Team_A": {
       "assigned_workers": [],
-      "addresses": [
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-111111111111",
-          "street": "Main Street",
-          "house_number": "42",
-          "status": "pending",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=42%20Main%20Street"
-        },
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-222222222222",
-          "street": "Oak Avenue",
-          "house_number": "15",
-          "status": "cancelled",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
-        },
-        {
-          "id": "749e850a-b7a8-4b0c-8c9d-c52aa8f53bba",
-          "street": "Test Street",
-          "house_number": "123",
-          "status": "pending",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=123%20Test%20Street"
-        }
-      ]
+      "addresses": []
     },
     "Team_B": {
-      "assigned_workers": [
-        "Chloe"
-      ],
-      "addresses": [
-        {
-          "id": "a1b2c3d4-e5f6-7890-abcd-333333333333",
-          "street": "Elm Road",
-          "house_number": "7",
-          "status": "pending",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=7%20Elm%20Road"
-        }
-      ]
+      "assigned_workers": [],
+      "addresses": []
     }
   },
   "18-02-2026": {
@@ -641,15 +609,21 @@
   },
   "16-02-2026": {
     "Team_A": {
-      "assigned_workers": [],
+      "assigned_workers": [
+        "Amylea",
+        "Angelo",
+        "Chloe"
+      ],
       "addresses": [
         {
-          "id": "de0d1ee9-570b-473e-a3ec-75881cca9d73",
-          "street": "Street",
+          "id": "014b79cc-1fe5-435d-8d11-754d5adcdb3d",
+          "street": "Elm Tree Close",
           "house_number": "5",
-          "status": "cancelled",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Street",
-          "client_name": "Helen2"
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Elm%20Tree%20Close",
+          "client_name": "Helen",
+          "notes": "Hassocks",
+          "time_interval": "1 - 2"
         }
       ]
     },
