@@ -87,12 +87,21 @@ function validateAddress(address) {
  */
 async function readClients() {
     try {
-        const store = getStore('abra-data');
-        const clients = await store.get('clients', { type: 'json' }) || [];
-        return clients;
+        console.log('Attempting to get store: abra-data');
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        console.log('Store object created. Fetching clients...');
+        const clients = await store.get('clients', { type: 'json' });
+        console.log('Clients fetched successfully:', clients ? clients.length : 'null');
+        return clients || [];
     } catch (error) {
-        console.error('Error reading clients from Blobs:', error);
-        throw new Error('Failed to read clients data');
+        console.error('CRITICAL Error reading clients from Blobs:', error);
+        // Log environment variables (sanitized) to check if context is missing
+        console.log('Environment check:', {
+            hasNetlifyToken: !!process.env.NETLIFY_AUTH_TOKEN,
+            hasSiteId: !!process.env.NETLIFY_SITE_ID,
+            deployPrimeUrl: process.env.DEPLOY_PRIME_URL
+        });
+        throw new Error(`Failed to read clients data: ${error.message}`);
     }
 }
 
@@ -102,11 +111,13 @@ async function readClients() {
  */
 async function writeClients(clients) {
     try {
-        const store = getStore('abra-data');
+        console.log(`Writing ${clients.length} clients to store: abra-data`);
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
         await store.setJSON('clients', clients);
+        console.log('Clients written successfully.');
     } catch (error) {
-        console.error('Error writing clients to Blobs:', error);
-        throw new Error('Failed to write clients data');
+        console.error('CRITICAL Error writing clients to Blobs:', error);
+        throw new Error(`Failed to write clients data: ${error.message}`);
     }
 }
 
@@ -116,12 +127,20 @@ async function writeClients(clients) {
  */
 async function readSchedule() {
     try {
-        const store = getStore('abra-data');
-        const schedule = await store.get('schedule', { type: 'json' }) || {};
-        return schedule;
+        console.log('Attempting to read schedule from store: abra-data');
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        console.log('Store object created. Fetching schedule...');
+        const schedule = await store.get('schedule', { type: 'json' });
+        console.log('Schedule fetched successfully. Keys:', schedule ? Object.keys(schedule) : 'null');
+        return schedule || {};
     } catch (error) {
-        console.error('Error reading schedule from Blobs:', error);
-        throw new Error('Failed to read schedule data');
+        console.error('CRITICAL Error reading schedule from Blobs:', error);
+        console.log('Environment check:', {
+            hasNetlifyToken: !!process.env.NETLIFY_AUTH_TOKEN,
+            hasSiteId: !!process.env.NETLIFY_SITE_ID,
+            deployPrimeUrl: process.env.DEPLOY_PRIME_URL
+        });
+        throw new Error(`Failed to read schedule data: ${error.message}`);
     }
 }
 
@@ -131,11 +150,13 @@ async function readSchedule() {
  */
 async function writeSchedule(schedule) {
     try {
-        const store = getStore('abra-data');
+        console.log('Writing updated schedule to store: abra-data');
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
         await store.setJSON('schedule', schedule);
+        console.log('Schedule written successfully.');
     } catch (error) {
-        console.error('Error writing schedule to Blobs:', error);
-        throw new Error('Failed to write schedule data');
+        console.error('CRITICAL Error writing schedule to Blobs:', error);
+        throw new Error(`Failed to write schedule data: ${error.message}`);
     }
 }
 

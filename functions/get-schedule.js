@@ -46,10 +46,12 @@ function generateDefaultSchedule() {
  */
 async function readSchedule() {
     try {
+        console.log('get-schedule: initializing store...');
         // Get the blob store for this site
-        const store = getStore('abra-data');
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
 
         // Retrieve schedule from blob storage
+        console.log('get-schedule: fetching data...');
         let schedule = await store.get('schedule', { type: 'json' });
 
         // If no schedule exists, generate default

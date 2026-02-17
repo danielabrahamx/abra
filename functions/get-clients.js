@@ -20,11 +20,13 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        console.log('get-clients: initializing store...');
         // Get the blob store for this site
-        const store = getStore('abra-data');
+        const store = getStore({ name: 'abra-data', consistency: 'strong' });
 
         // Retrieve clients from blob storage
         const clients = await store.get('clients', { type: 'json' }) || [];
+        console.log(`get-clients: retrieved ${clients.length} clients`);
 
         return {
             statusCode: 200,
