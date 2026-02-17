@@ -542,7 +542,20 @@ exports.handler = async (event) => {
         }
 
         // Add job to schedule using Read-Modify-Write pattern
-        const createdJob = addJob(date, team_id, address, selected_workers || []);
+        let createdJob;
+        try {
+            createdJob = addJob(date, team_id, address, selected_workers || []);
+        } catch (jobError) {
+            console.error('Error adding job:', jobError);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    error: 'Failed to create job',
+                    message: jobError.message,
+                    stack: jobError.stack // useful for debugging
+                })
+            };
+        }
 
         return {
             statusCode: 201,
