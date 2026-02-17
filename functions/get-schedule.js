@@ -42,13 +42,12 @@ function generateDefaultSchedule() {
 
 /**
  * Read schedule from Blobs, or return default template
- * @param {Object} context - Netlify context for Blobs authentication
  * @returns {Object} Schedule data
  */
-async function readSchedule(context) {
+async function readSchedule() {
     try {
-        // Get the blob store for this site with context
-        const store = getStore({ name: 'abra-data', context });
+        // Get the blob store for this site
+        const store = getStore('abra-data');
 
         // Retrieve schedule from blob storage
         let schedule = await store.get('schedule', { type: 'json' });
@@ -88,7 +87,6 @@ async function readSchedule(context) {
 /**
  * Netlify Function handler
  * @param {Object} event - Netlify event object
- * @param {Object} context - Netlify context (required for Blobs)
  * @returns {Object} HTTP response with schedule data
  */
 exports.handler = async (event, context) => {
@@ -101,7 +99,7 @@ exports.handler = async (event, context) => {
             };
         }
 
-        const schedule = await readSchedule(context);
+        const schedule = await readSchedule();
 
         return {
             statusCode: 200,

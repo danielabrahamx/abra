@@ -20,8 +20,8 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // Get the blob store for this site with context
-        const store = getStore({ name: 'abra-data', context });
+        // Get the blob store for this site
+        const store = getStore('abra-data');
 
         // Retrieve clients from blob storage
         const clients = await store.get('clients', { type: 'json' }) || [];
