@@ -284,6 +284,7 @@
                     <p class="job-address-text text-lg font-bold text-gray-900">
                       ${address.house_number} ${address.street}
                     </p>
+                    ${address.time_interval ? `<p class="text-sm font-bold text-gray-700 mt-0.5">🕒 ${address.time_interval}</p>` : ''}
                     ${address.notes ? `<p class="text-xs text-gray-500 italic mt-1">${address.notes}</p>` : ''}
                   </div>
                   

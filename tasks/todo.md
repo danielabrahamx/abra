@@ -31,6 +31,9 @@
 - [x] Create manager dashboard
 - [x] Implement DOM-based toast notifications
 - [x] Add schedule management controls (drag-and-drop, quick-add, cancel)
+- [x] Add 'Time Interval' field to Quick Add and Job Cards (Manager & Worker views)
+- [x] Implement Hard Delete for jobs
+- [x] Fix 'Clear All Assignments' race condition with batched API endpoint
 
 ## Testing & Verification
 - [x] Validate all HTMX targets use CSS IDs

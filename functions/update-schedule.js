@@ -203,6 +203,73 @@ exports.handler = async (event, context) => {
             };
         }
 
+        // ─── ACTION: clear-schedule-assignments ──────────────────
+        if (action === 'clear-schedule-assignments') {
+            const { dates } = body;
+
+            if (!Array.isArray(dates) || dates.length === 0) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: '"dates" must be a non-empty array of DD-MM-YYYY strings.' })
+                };
+            }
+
+            // Read-Modify-Write
+            const schedule = await readJSON('data/schedule.json');
+            let modified = false;
+
+            for (const date of dates) {
+                if (schedule[date]) {
+                    if (schedule[date].Team_A) schedule[date].Team_A.assigned_workers = [];
+                    if (schedule[date].Team_B) schedule[date].Team_B.assigned_workers = [];
+                    modified = true;
+                }
+            }
+
+            if (modified) {
+                await writeJSON('data/schedule.json', schedule, `Clear assignments for ${dates.length} days`);
+            }
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ message: 'Assignments cleared successfully' })
+            };
+        }
+
+        // ─── ACTION: delete-job ──────────────────────────────────
+        if (action === 'delete-job') {
+            const { date, team_id, job_id } = body;
+
+            // Validate inputs
+            if (!isValidDate(date) || !isValidTeam(team_id) || !job_id) {
+                return { statusCode: 400, body: JSON.stringify({ error: 'Invalid parameters for delete-job' }) };
+            }
+
+            const schedule = await readJSON('data/schedule.json');
+
+            if (!schedule[date] || !schedule[date][team_id] || !schedule[date][team_id].addresses) {
+                return { statusCode: 404, body: JSON.stringify({ error: 'Schedule or job not found' }) };
+            }
+
+            const addresses = schedule[date][team_id].addresses;
+            const idx = addresses.findIndex(j => j.id === job_id);
+
+            if (idx === -1) {
+                return { statusCode: 404, body: JSON.stringify({ error: 'Job not found' }) };
+            }
+
+            // Remove the job completely
+            const removedJob = addresses.splice(idx, 1)[0];
+            await writeJSON('data/schedule.json', schedule, `Delete job ${job_id}`);
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ message: 'Job deleted successfully', job: removedJob })
+            };
+        }
+
         // ─── ACTION: cancel-job ───────────────────────────────────
         if (action === 'cancel-job') {
             const { date, team_id, job_id } = body;
@@ -338,7 +405,7 @@ exports.handler = async (event, context) => {
         }
 
         // ─── ACTION: add-job (default) ────────────────────────────
-        const { date, team_id, address, selected_workers } = body;
+        const { date, team_id, address, time_interval, selected_workers } = body;
 
         // Validate date
         if (!isValidDate(date)) {
@@ -416,6 +483,9 @@ exports.handler = async (event, context) => {
         // Attach client info when job is created from a saved client
         if (address.client_name) job.client_name = address.client_name;
         if (address.notes) job.notes = address.notes;
+
+        // Attach time_interval if provided
+        if (time_interval) job.time_interval = time_interval;
 
         // Add job to addresses array
         schedule[date][team_id].addresses.push(job);

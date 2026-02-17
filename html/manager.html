@@ -411,6 +411,8 @@
                                                     ${clientsData.map(c => `<option value="${c.id}">${c.name} — ${c.house_number} ${c.street}</option>`).join('')}
                                                     <option value="__new__">+ Add New Address</option>
                                                 </select>
+                                                <input type="text" name="time_interval" placeholder="Time (e.g. 12:45 - 2:15)"
+                                                       class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
                                                 <div class="manual-address-fields hidden">
                                                     <input type="text" name="client_name" placeholder="Name (e.g. Helen)"
                                                            class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
@@ -522,6 +524,8 @@
         // ─── Add New Job (Save Client & Schedule) ────────────────
         async function addNewJob(date, teamId, select, formContainer) {
             const selectedValue = select.value;
+            const timeIntervalInput = formContainer.querySelector('input[name="time_interval"]');
+            const timeInterval = timeIntervalInput ? timeIntervalInput.value.trim() : '';
             let street, houseNumber, clientName, notes;
 
             if (!selectedValue) {
@@ -591,7 +595,8 @@
                     action: 'add-job',
                     date: date,
                     team_id: teamId,
-                    address: addressPayload
+                    address: addressPayload,
+                    time_interval: timeInterval
                 };
 
                 const res = await fetch(API_POST, {
@@ -609,6 +614,9 @@
 
                 // Cleanup UI
                 loadScheduleData(); // Refresh the grid
+
+                // Clear time input
+                if (timeIntervalInput) timeIntervalInput.value = '';
 
                 // Close the form if still open/finding element
                 // Note: re-rendering grid might have destroyed the form element reference
@@ -750,25 +758,66 @@
                         <span class="job-address text-sm font-medium text-gray-800">
                             ${addr.house_number} ${addr.street}
                         </span>
+                        ${addr.time_interval ? `<span class="block text-xs text-gray-500 font-medium">🕒 ${addr.time_interval}</span>` : ''}
                         <span class="job-status-badge ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white
                             ${isCancelled ? 'bg-gray-400' : addr.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}">
                             ${addr.status || 'pending'}
                         </span>
                     </div>
-                    ${!isCancelled ? `
-                        <button onclick="cancelJob('${date}', '${teamId}', '${addr.id}')"
-                                class="shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                                title="Cancel this job">
-                            Cancel
+                    <div class="flex flex-col gap-1 items-end">
+                        ${!isCancelled ? `
+                            <button onclick="cancelJob('${date}', '${teamId}', '${addr.id}')"
+                                    class="shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                    title="Cancel this job">
+                                Cancel
+                            </button>
+                        ` : `
+                            <span class="shrink-0 text-xs text-gray-400 italic mb-1">Cancelled</span>
+                        `}
+                        <button onclick="deleteJob('${date}', '${teamId}', '${addr.id}')"
+                                class="shrink-0 px-2 py-1 text-xs font-medium text-gray-500 hover:text-red-700 bg-transparent hover:bg-red-50 rounded transition-colors"
+                                title="Completely remove this assignment">
+                            🗑️
                         </button>
-                    ` : `
-                        <span class="shrink-0 text-xs text-gray-400 italic">Cancelled</span>
-                    `}
+                    </div>
                 `;
                 jobList.appendChild(card);
             });
 
             teamContainer.appendChild(jobList);
+        }
+
+        // ─── Delete a Job (Hard Delete) ────────────────────────────
+        function deleteJob(date, teamId, jobId) {
+            if (!confirm('Permanently delete this assignment?')) return;
+
+            const payload = {
+                action: 'delete-job',
+                date: date,
+                team_id: teamId,
+                job_id: jobId
+            };
+
+            fetch(API_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || err.error || `Failed to delete job: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    showToast('Job deleted', 'success');
+                    loadScheduleData(); // Reload
+                })
+                .catch(err => {
+                    console.error('Delete error:', err);
+                    showToast(`Failed to delete — ${err.message || 'Network error'}`, 'error');
+                });
         }
 
         // ─── Cancel a Job (Soft Delete) ────────────────────────────
@@ -809,13 +858,38 @@
             if (!confirm('Clear all worker assignments for this week?')) return;
 
             const dates = getWeekDates().map(d => formatDate(d));
-            dates.forEach(date => {
-                TEAMS.forEach(teamId => {
-                    const zone = document.getElementById(`team-${teamId}-${date}`);
-                    if (zone) zone.innerHTML = '';
-                    syncTeamToServer(date, teamId);
+
+            // Use single API call to prevent race conditions (409 errors)
+            fetch(API_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'clear-schedule-assignments',
+                    dates: dates
+                })
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || err.error || `Failed to clear assignments: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    showToast('All assignments cleared for this week', 'success');
+                    // Clear local DOM immediately for feedback
+                    dates.forEach(date => {
+                        TEAMS.forEach(teamId => {
+                            const zone = document.getElementById(`team-${teamId}-${date}`);
+                            if (zone) zone.innerHTML = '';
+                        });
+                    });
+                    loadScheduleData(); // Sync with server state
+                })
+                .catch(err => {
+                    console.error('Clear All error:', err);
+                    showToast(`Failed to clear — ${err.message}`, 'error');
                 });
-            });
         }
 
         // ─── Toast Notifications ──────────────────────────────────
