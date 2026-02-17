@@ -610,7 +610,18 @@
   "16-02-2026": {
     "Team_A": {
       "assigned_workers": [],
-      "addresses": []
+      "addresses": [
+        {
+          "id": "014b79cc-1fe5-435d-8d11-754d5adcdb3d",
+          "street": "Elm Tree Close",
+          "house_number": "5",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Elm%20Tree%20Close",
+          "client_name": "Helen",
+          "notes": "Hassocks",
+          "time_interval": "1 - 2"
+        }
+      ]
     },
     "Team_B": {
       "assigned_workers": [],
