@@ -612,16 +612,7 @@
   "16-02-2026": {
     "Team_A": {
       "assigned_workers": [],
-      "addresses": [
-        {
-          "id": "de0d1ee9-570b-473e-a3ec-75881cca9d73",
-          "street": "Street",
-          "house_number": "5",
-          "status": "cancelled",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Street",
-          "client_name": "Helen2"
-        }
-      ]
+      "addresses": []
     },
     "Team_B": {
       "assigned_workers": [],
