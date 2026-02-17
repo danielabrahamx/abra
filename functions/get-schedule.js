@@ -1,14 +1,10 @@
 /**
  * get-schedule.js - Netlify Function to retrieve schedule data
- * Returns schedule.json with support for assigned_workers arrays
+ * Returns schedule from Netlify Blobs with support for assigned_workers arrays
  * Generates default 7-day template if schedule is missing/empty
  */
 
-const fs = require('fs');
-const path = require('path');
-
-// Path to schedule.json
-const SCHEDULE_PATH = path.join(__dirname, '..', 'data', 'schedule.json');
+const { getStore } = require('@netlify/blobs');
 
 /**
  * Generate a default 7-day schedule template
@@ -45,20 +41,22 @@ function generateDefaultSchedule() {
 }
 
 /**
- * Read schedule from file, or return default template
+ * Read schedule from Blobs, or return default template
  * @returns {Object} Schedule data
  */
-function readSchedule() {
+async function readSchedule() {
     try {
-        // Check if file exists
-        if (!fs.existsSync(SCHEDULE_PATH)) {
-            console.log('Schedule file not found, generating default template');
+        // Get the blob store for this site
+        const store = getStore('abra-data');
+
+        // Retrieve schedule from blob storage
+        let schedule = await store.get('schedule', { type: 'json' });
+
+        // If no schedule exists, generate default
+        if (!schedule || Object.keys(schedule).length === 0) {
+            console.log('Schedule not found in Blobs, generating default template');
             return generateDefaultSchedule();
         }
-
-        // Read and parse the file
-        const data = fs.readFileSync(SCHEDULE_PATH, 'utf8');
-        const schedule = JSON.parse(data);
 
         // Ensure each team entry has assigned_workers array
         Object.keys(schedule).forEach(dateKey => {
@@ -81,7 +79,7 @@ function readSchedule() {
 
         return schedule;
     } catch (error) {
-        console.error('Error reading schedule:', error);
+        console.error('Error reading schedule from Blobs:', error);
         return generateDefaultSchedule();
     }
 }
@@ -101,7 +99,7 @@ exports.handler = async (event) => {
             };
         }
 
-        const schedule = readSchedule();
+        const schedule = await readSchedule();
 
         return {
             statusCode: 200,

@@ -1,0 +1,9 @@
+[
+    {
+        "id": "template-001",
+        "name": "Example Client",
+        "street": "Example Street",
+        "house_number": "123",
+        "notes": "This is a template - replace with real client data"
+    }
+]

@@ -1,17 +1,12 @@
 /**
- * update-schedule.js - Netlify Function to add jobs to the schedule
- * Uses the Read-Modify-Write pattern to safely update schedule.json
- * Accepts POST request with Address + Selected Workers
+ * update-schedule.js - Netlify Function to manage schedule and clients
+ * Uses Netlify Blobs for persistent storage (replaces file-based storage)
+ * Accepts POST request for various actions: add-job, update-workers, cancel-job, add-client, delete-client
  * Validates inputs against Data Dictionary and ensures status defaults to 'pending'
  */
 
-const fs = require('fs');
-const path = require('path');
+const { getStore } = require('@netlify/blobs');
 const { generateUUID, buildMapsURL, WORKER_ROSTER } = require('./lib/utils');
-
-// Path to data files
-const SCHEDULE_PATH = path.join(__dirname, '..', 'data', 'schedule.json');
-const CLIENTS_PATH = path.join(__dirname, '..', 'data', 'clients.json');
 
 // Valid status values from Data Dictionary
 const VALID_STATUSES = ['pending', 'completed', 'cancelled'];
@@ -87,62 +82,59 @@ function validateAddress(address) {
 }
 
 /**
- * Read clients from file
- * @returns {Array} Clients array
+ * Read clients from Netlify Blobs
+ * @returns {Promise<Array>} Clients array
  */
-function readClients() {
+async function readClients() {
     try {
-        if (!fs.existsSync(CLIENTS_PATH)) return [];
-        const data = fs.readFileSync(CLIENTS_PATH, 'utf8');
-        return JSON.parse(data);
+        const store = getStore('abra-data');
+        const clients = await store.get('clients', { type: 'json' }) || [];
+        return clients;
     } catch (error) {
-        console.error('Error reading clients:', error);
+        console.error('Error reading clients from Blobs:', error);
         throw new Error('Failed to read clients data');
     }
 }
 
 /**
- * Write clients to file
+ * Write clients to Netlify Blobs
  * @param {Array} clients - Clients array to write
  */
-function writeClients(clients) {
+async function writeClients(clients) {
     try {
-        const data = JSON.stringify(clients, null, 4);
-        fs.writeFileSync(CLIENTS_PATH, data, 'utf8');
+        const store = getStore('abra-data');
+        await store.setJSON('clients', clients);
     } catch (error) {
-        console.error('Error writing clients:', error);
+        console.error('Error writing clients to Blobs:', error);
         throw new Error('Failed to write clients data');
     }
 }
 
 /**
- * Read schedule from file
- * @returns {Object} Schedule data
+ * Read schedule from Netlify Blobs
+ * @returns {Promise<Object>} Schedule data
  */
-function readSchedule() {
+async function readSchedule() {
     try {
-        if (!fs.existsSync(SCHEDULE_PATH)) {
-            return {};
-        }
-
-        const data = fs.readFileSync(SCHEDULE_PATH, 'utf8');
-        return JSON.parse(data);
+        const store = getStore('abra-data');
+        const schedule = await store.get('schedule', { type: 'json' }) || {};
+        return schedule;
     } catch (error) {
-        console.error('Error reading schedule:', error);
+        console.error('Error reading schedule from Blobs:', error);
         throw new Error('Failed to read schedule data');
     }
 }
 
 /**
- * Write schedule to file
+ * Write schedule to Netlify Blobs
  * @param {Object} schedule - Schedule data to write
  */
-function writeSchedule(schedule) {
+async function writeSchedule(schedule) {
     try {
-        const data = JSON.stringify(schedule, null, 4);
-        fs.writeFileSync(SCHEDULE_PATH, data, 'utf8');
+        const store = getStore('abra-data');
+        await store.setJSON('schedule', schedule);
     } catch (error) {
-        console.error('Error writing schedule:', error);
+        console.error('Error writing schedule to Blobs:', error);
         throw new Error('Failed to write schedule data');
     }
 }
@@ -153,11 +145,11 @@ function writeSchedule(schedule) {
  * @param {string} teamId - Team identifier (Team_A or Team_B)
  * @param {Object} address - Address object with street and house_number
  * @param {Array<string>} selectedWorkers - Array of worker names
- * @returns {Object} Created job with generated id and maps_url
+ * @returns {Promise<Object>} Created job with generated id and maps_url
  */
-function addJob(date, teamId, address, selectedWorkers) {
+async function addJob(date, teamId, address, selectedWorkers) {
     // STEP 1: READ
-    const schedule = readSchedule();
+    const schedule = await readSchedule();
 
     // Ensure date exists in schedule
     if (!schedule[date]) {
@@ -203,7 +195,7 @@ function addJob(date, teamId, address, selectedWorkers) {
     }
 
     // STEP 3: WRITE
-    writeSchedule(schedule);
+    await writeSchedule(schedule);
 
     return job;
 }
@@ -214,11 +206,11 @@ function addJob(date, teamId, address, selectedWorkers) {
  * @param {string} date - Date in DD-MM-YYYY format
  * @param {string} teamId - Team identifier (Team_A or Team_B)
  * @param {Array<string>} assignedWorkers - Array of worker names
- * @returns {Object} Updated team data
+ * @returns {Promise<Object>} Updated team data
  */
-function updateWorkers(date, teamId, assignedWorkers) {
+async function updateWorkers(date, teamId, assignedWorkers) {
     // STEP 1: READ
-    const schedule = readSchedule();
+    const schedule = await readSchedule();
 
     // Ensure date exists in schedule
     if (!schedule[date]) {
@@ -237,7 +229,7 @@ function updateWorkers(date, teamId, assignedWorkers) {
     schedule[date][teamId].assigned_workers = assignedWorkers;
 
     // STEP 3: WRITE
-    writeSchedule(schedule);
+    await writeSchedule(schedule);
 
     return {
         date,
@@ -252,11 +244,11 @@ function updateWorkers(date, teamId, assignedWorkers) {
  * @param {string} date - Date in DD-MM-YYYY format
  * @param {string} teamId - Team identifier (Team_A or Team_B)
  * @param {string} jobId - UUID of the job to cancel
- * @returns {Object} Updated job object
+ * @returns {Promise<Object>} Updated job object
  */
-function cancelJob(date, teamId, jobId) {
+async function cancelJob(date, teamId, jobId) {
     // STEP 1: READ
-    const schedule = readSchedule();
+    const schedule = await readSchedule();
 
     // Validate date/team exist
     if (!schedule[date] || !schedule[date][teamId]) {
@@ -282,14 +274,14 @@ function cancelJob(date, teamId, jobId) {
     job.status = 'cancelled';
 
     // STEP 3: WRITE
-    writeSchedule(schedule);
+    await writeSchedule(schedule);
 
     return job;
 }
 
 /**
  * Netlify Function handler
- * Routes between "add-job" (default) and "update-workers" actions
+ * Routes between different actions
  * @param {Object} event - Netlify event object
  * @returns {Object} HTTP response
  */
@@ -373,7 +365,7 @@ exports.handler = async (event) => {
             }
 
             // Perform update
-            const result = updateWorkers(date, team_id, assigned_workers);
+            const result = await updateWorkers(date, team_id, assigned_workers);
 
             return {
                 statusCode: 200,
@@ -423,7 +415,7 @@ exports.handler = async (event) => {
             }
 
             try {
-                const updatedJob = cancelJob(date, team_id, job_id);
+                const updatedJob = await cancelJob(date, team_id, job_id);
 
                 return {
                     statusCode: 200,
@@ -458,7 +450,7 @@ exports.handler = async (event) => {
                 return { statusCode: 400, body: JSON.stringify({ error: 'Client "house_number" is required.' }) };
             }
 
-            const clients = readClients();
+            const clients = await readClients();
             const newClient = {
                 id: generateUUID(),
                 name: name.trim(),
@@ -467,7 +459,7 @@ exports.handler = async (event) => {
                 notes: (notes && typeof notes === 'string') ? notes.trim() : ''
             };
             clients.push(newClient);
-            writeClients(clients);
+            await writeClients(clients);
 
             return {
                 statusCode: 201,
@@ -483,13 +475,13 @@ exports.handler = async (event) => {
                 return { statusCode: 400, body: JSON.stringify({ error: 'Missing or invalid "client_id".' }) };
             }
 
-            const clients = readClients();
+            const clients = await readClients();
             const idx = clients.findIndex(c => c.id === client_id);
             if (idx === -1) {
                 return { statusCode: 404, body: JSON.stringify({ error: `Client "${client_id}" not found.` }) };
             }
             const removed = clients.splice(idx, 1)[0];
-            writeClients(clients);
+            await writeClients(clients);
 
             return {
                 statusCode: 200,
@@ -544,7 +536,7 @@ exports.handler = async (event) => {
         // Add job to schedule using Read-Modify-Write pattern
         let createdJob;
         try {
-            createdJob = addJob(date, team_id, address, selected_workers || []);
+            createdJob = await addJob(date, team_id, address, selected_workers || []);
         } catch (jobError) {
             console.error('Error adding job:', jobError);
             return {

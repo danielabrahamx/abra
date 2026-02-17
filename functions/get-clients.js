@@ -1,12 +1,9 @@
 /**
- * get-clients.js - Netlify Function to read the clients directory
- * Returns the contents of data/clients.json
+ * get-clients.js - Netlify Function to read clients from Netlify Blobs
+ * Returns the clients array from blob storage
  */
 
-const fs = require('fs');
-const path = require('path');
-
-const CLIENTS_PATH = path.join(__dirname, '..', 'data', 'clients.json');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event) => {
     // CORS preflight
@@ -23,11 +20,11 @@ exports.handler = async (event) => {
     }
 
     try {
-        let clients = [];
-        if (fs.existsSync(CLIENTS_PATH)) {
-            const data = fs.readFileSync(CLIENTS_PATH, 'utf8');
-            clients = JSON.parse(data);
-        }
+        // Get the blob store for this site
+        const store = getStore('abra-data');
+
+        // Retrieve clients from blob storage
+        const clients = await store.get('clients', { type: 'json' }) || [];
 
         return {
             statusCode: 200,
@@ -38,10 +35,10 @@ exports.handler = async (event) => {
             body: JSON.stringify(clients)
         };
     } catch (error) {
-        console.error('Error reading clients:', error);
+        console.error('Error reading clients from Blobs:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to read clients data' })
+            body: JSON.stringify({ error: 'Failed to read clients data', message: error.message })
         };
     }
 };
