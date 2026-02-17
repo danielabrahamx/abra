@@ -189,7 +189,13 @@
         // Render schedule cards
         function renderSchedule(schedule) {
             const container = document.getElementById('scheduleContainer');
-            const dates = Object.keys(schedule).sort();
+            const dates = Object.keys(schedule).sort((a, b) => {
+                const [d1, m1, y1] = a.split('-').map(Number);
+                const [d2, m2, y2] = b.split('-').map(Number);
+                const dateA = new Date(y1, m1 - 1, d1);
+                const dateB = new Date(y2, m2 - 1, d2);
+                return dateA - dateB;
+            });
 
             let html = '';
 
