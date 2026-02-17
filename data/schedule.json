@@ -1,645 +1,664 @@
 {
-    "17-02-2026": {
-        "Team_A": {
-            "assigned_workers": [
-                "Amylea",
-                "Angelo"
-            ],
-            "addresses": [
-                {
-                    "id": "a1b2c3d4-e5f6-7890-abcd-111111111111",
-                    "street": "Main Street",
-                    "house_number": "42",
-                    "status": "pending",
-                    "maps_url": "https://www.google.com/maps/search/?api=1&query=42%20Main%20Street"
-                },
-                {
-                    "id": "a1b2c3d4-e5f6-7890-abcd-222222222222",
-                    "street": "Oak Avenue",
-                    "house_number": "15",
-                    "status": "cancelled",
-                    "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
-                },
-                {
-                    "id": "749e850a-b7a8-4b0c-8c9d-c52aa8f53bba",
-                    "street": "Test Street",
-                    "house_number": "123",
-                    "status": "pending",
-                    "maps_url": "https://www.google.com/maps/search/?api=1&query=123%20Test%20Street"
-                }
-            ]
+  "17-02-2026": {
+    "Team_A": {
+      "assigned_workers": [
+        "Amylea",
+        "Angelo"
+      ],
+      "addresses": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-111111111111",
+          "street": "Main Street",
+          "house_number": "42",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=42%20Main%20Street"
         },
-        "Team_B": {
-            "assigned_workers": [
-                "Chloe"
-            ],
-            "addresses": [
-                {
-                    "id": "a1b2c3d4-e5f6-7890-abcd-333333333333",
-                    "street": "Elm Road",
-                    "house_number": "7",
-                    "status": "pending",
-                    "maps_url": "https://www.google.com/maps/search/?api=1&query=7%20Elm%20Road"
-                }
-            ]
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-222222222222",
+          "street": "Oak Avenue",
+          "house_number": "15",
+          "status": "cancelled",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=15%20Oak%20Avenue"
+        },
+        {
+          "id": "749e850a-b7a8-4b0c-8c9d-c52aa8f53bba",
+          "street": "Test Street",
+          "house_number": "123",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=123%20Test%20Street"
         }
+      ]
     },
-    "18-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": [
-                {
-                    "id": "a1b2c3d4-e5f6-7890-abcd-444444444444",
-                    "street": "Pine Lane",
-                    "house_number": "99",
-                    "status": "completed",
-                    "maps_url": "https://www.google.com/maps/search/?api=1&query=99%20Pine%20Lane"
-                }
-            ]
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
+    "Team_B": {
+      "assigned_workers": [
+        "Chloe"
+      ],
+      "addresses": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-333333333333",
+          "street": "Elm Road",
+          "house_number": "7",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=7%20Elm%20Road"
         }
-    },
-    "19-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "20-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "21-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "22-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "23-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "24-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "25-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "26-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "27-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "28-02-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "01-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "02-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "03-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "04-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "05-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "06-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "07-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "08-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "09-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "10-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "11-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "12-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "13-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "14-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "15-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "16-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "17-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "18-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "19-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "20-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "21-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "22-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "23-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "24-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "25-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "26-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "27-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "28-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "29-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "30-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "31-03-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "01-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "02-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "03-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "04-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "05-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "06-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "07-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "08-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "09-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "10-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "11-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "12-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "13-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "14-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "15-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "16-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
-    },
-    "17-04-2026": {
-        "Team_A": {
-            "assigned_workers": [],
-            "addresses": []
-        },
-        "Team_B": {
-            "assigned_workers": [],
-            "addresses": []
-        }
+      ]
     }
+  },
+  "18-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": [
+        {
+          "id": "a1b2c3d4-e5f6-7890-abcd-444444444444",
+          "street": "Pine Lane",
+          "house_number": "99",
+          "status": "completed",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=99%20Pine%20Lane"
+        }
+      ]
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "19-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "20-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "21-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "22-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "23-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "24-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "25-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "26-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "27-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "28-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "01-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "02-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "03-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "04-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "05-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "06-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "07-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "08-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "09-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "10-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "11-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "12-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "13-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "14-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "15-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "16-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "17-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "18-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "19-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "20-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "21-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "22-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "23-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "24-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "25-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "26-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "27-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "28-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "29-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "30-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "31-03-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "01-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "02-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "03-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "04-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "05-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "06-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "07-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "08-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "09-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "10-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "11-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "12-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "13-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "14-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "15-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "16-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "17-04-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": []
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  },
+  "16-02-2026": {
+    "Team_A": {
+      "assigned_workers": [],
+      "addresses": [
+        {
+          "id": "de0d1ee9-570b-473e-a3ec-75881cca9d73",
+          "street": "Street",
+          "house_number": "5",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Street",
+          "client_name": "Helen2"
+        }
+      ]
+    },
+    "Team_B": {
+      "assigned_workers": [],
+      "addresses": []
+    }
+  }
 }
