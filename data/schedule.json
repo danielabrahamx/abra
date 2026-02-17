@@ -1,9 +1,7 @@
 {
   "17-02-2026": {
     "Team_A": {
-      "assigned_workers": [
-        "Angelo"
-      ],
+      "assigned_workers": [],
       "addresses": [
         {
           "id": "a1b2c3d4-e5f6-7890-abcd-111111111111",
