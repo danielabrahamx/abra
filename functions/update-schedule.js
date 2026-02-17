@@ -88,7 +88,7 @@ function validateAddress(address) {
 async function readClients() {
     try {
         console.log('Attempting to get store: abra-data');
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        const store = getStore({ name: 'abra-data' });
         console.log('Store object created. Fetching clients...');
         const clients = await store.get('clients', { type: 'json' });
         console.log('Clients fetched successfully:', clients ? clients.length : 'null');
@@ -112,7 +112,7 @@ async function readClients() {
 async function writeClients(clients) {
     try {
         console.log(`Writing ${clients.length} clients to store: abra-data`);
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        const store = getStore({ name: 'abra-data' });
         await store.setJSON('clients', clients);
         console.log('Clients written successfully.');
     } catch (error) {
@@ -128,7 +128,7 @@ async function writeClients(clients) {
 async function readSchedule() {
     try {
         console.log('Attempting to read schedule from store: abra-data');
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        const store = getStore({ name: 'abra-data' });
         console.log('Store object created. Fetching schedule...');
         const schedule = await store.get('schedule', { type: 'json' });
         console.log('Schedule fetched successfully. Keys:', schedule ? Object.keys(schedule) : 'null');
@@ -151,7 +151,7 @@ async function readSchedule() {
 async function writeSchedule(schedule) {
     try {
         console.log('Writing updated schedule to store: abra-data');
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        const store = getStore({ name: 'abra-data' });
         await store.setJSON('schedule', schedule);
         console.log('Schedule written successfully.');
     } catch (error) {

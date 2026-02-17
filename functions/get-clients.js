@@ -22,7 +22,7 @@ exports.handler = async (event, context) => {
     try {
         console.log('get-clients: initializing store...');
         // Get the blob store for this site
-        const store = getStore({ name: 'abra-data', consistency: 'strong' });
+        const store = getStore({ name: 'abra-data' });
 
         // Retrieve clients from blob storage
         const clients = await store.get('clients', { type: 'json' }) || [];
