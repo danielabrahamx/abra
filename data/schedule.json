@@ -5,7 +5,18 @@
         "Angelo",
         "Olivia"
       ],
-      "addresses": []
+      "addresses": [
+        {
+          "id": "4e7f7638-1c78-4c92-8c86-2992ff7e0109",
+          "street": "Elm Tree Close",
+          "house_number": "5",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=5%20Elm%20Tree%20Close",
+          "client_name": "Helen",
+          "notes": "Hassocks",
+          "time_interval": "2 - 3"
+        }
+      ]
     },
     "Team_B": {
       "assigned_workers": [],
