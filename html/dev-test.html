@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       padding: 2rem;
@@ -18,7 +19,7 @@
       min-height: 100vh;
       color: #333;
     }
-    
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -27,19 +28,19 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       padding: 2rem;
     }
-    
+
     h1 {
       color: #667eea;
       margin-bottom: 0.5rem;
       font-size: 2rem;
     }
-    
+
     .subtitle {
       color: #666;
       margin-bottom: 2rem;
       font-size: 0.95rem;
     }
-    
+
     .worker-roster {
       background: #f8f9fa;
       padding: 1.5rem;
@@ -47,19 +48,19 @@
       margin-bottom: 2rem;
       border-left: 4px solid #667eea;
     }
-    
+
     .worker-roster h2 {
       color: #667eea;
       font-size: 1.2rem;
       margin-bottom: 1rem;
     }
-    
+
     .worker-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
     }
-    
+
     .worker-tag {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -68,7 +69,7 @@
       font-size: 0.9rem;
       font-weight: 500;
     }
-    
+
     button {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -81,28 +82,28 @@
       transition: transform 0.2s, box-shadow 0.2s;
       margin-bottom: 2rem;
     }
-    
+
     button:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
     }
-    
+
     button:active {
       transform: translateY(0);
     }
-    
+
     #loading {
       text-align: center;
       color: #667eea;
       font-size: 1.1rem;
       padding: 2rem;
     }
-    
+
     .schedule-grid {
       display: grid;
       gap: 1.5rem;
     }
-    
+
     .day-card {
       background: #f8f9fa;
       border-radius: 12px;
@@ -110,11 +111,11 @@
       border: 2px solid #e9ecef;
       transition: border-color 0.3s;
     }
-    
+
     .day-card:hover {
       border-color: #667eea;
     }
-    
+
     .day-header {
       color: #667eea;
       font-size: 1.3rem;
@@ -123,44 +124,44 @@
       padding-bottom: 0.5rem;
       border-bottom: 2px solid #667eea;
     }
-    
+
     .teams {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
-    
+
     .team {
       background: white;
       padding: 1rem;
       border-radius: 8px;
       border: 1px solid #dee2e6;
     }
-    
+
     .team-name {
       font-weight: 600;
       color: #764ba2;
       margin-bottom: 0.75rem;
       font-size: 1.1rem;
     }
-    
+
     .workers-label {
       font-size: 0.85rem;
       color: #666;
       margin-bottom: 0.5rem;
       font-weight: 500;
     }
-    
+
     .worker-list {
       color: #495057;
       font-size: 0.9rem;
       font-style: italic;
     }
-    
+
     .worker-list.empty {
       color: #adb5bd;
     }
-    
+
     .addresses-label {
       font-size: 0.85rem;
       color: #666;
@@ -168,12 +169,12 @@
       margin-bottom: 0.5rem;
       font-weight: 500;
     }
-    
+
     .address-count {
       color: #495057;
       font-size: 0.9rem;
     }
-    
+
     pre {
       background: #1e1e1e;
       color: #d4d4d4;
@@ -184,54 +185,55 @@
       line-height: 1.5;
       margin-top: 2rem;
     }
-    
+
     .json-key {
       color: #9cdcfe;
     }
-    
+
     .json-string {
       color: #ce9178;
     }
-    
+
     .json-number {
       color: #b5cea8;
     }
-    
+
     @media (max-width: 768px) {
       .teams {
         grid-template-columns: 1fr;
       }
-      
+
       body {
         padding: 1rem;
       }
-      
+
       .container {
         padding: 1.5rem;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>🗓️ Schedule API Dev Test</h1>
     <p class="subtitle">Testing get-schedule.js function with assigned_workers support</p>
-    
+
     <div class="worker-roster">
       <h2>👥 Worker Roster</h2>
       <div class="worker-tags" id="workerRoster">
         <!-- Workers will be loaded here -->
       </div>
     </div>
-    
+
     <button onclick="loadSchedule()">🔄 Load Schedule Data</button>
-    
+
     <div id="loading" style="display: none;">
       ⏳ Loading schedule data...
     </div>
-    
+
     <div id="scheduleDisplay"></div>
-    
+
     <div id="rawJson"></div>
   </div>
 
@@ -245,42 +247,43 @@
       'Leeroy',
       'Myka',
       'Nathan',
-      'Olivia'
+      'Olivia',
+      'Tracy'
     ];
-    
+
     // Display worker roster on page load
     function displayWorkerRoster() {
       const rosterContainer = document.getElementById('workerRoster');
-      rosterContainer.innerHTML = WORKER_ROSTER.map(worker => 
+      rosterContainer.innerHTML = WORKER_ROSTER.map(worker =>
         `<span class="worker-tag">${worker}</span>`
       ).join('');
     }
-    
+
     // Load schedule data from the API
     async function loadSchedule() {
       const loadingEl = document.getElementById('loading');
       const displayEl = document.getElementById('scheduleDisplay');
       const rawJsonEl = document.getElementById('rawJson');
-      
+
       loadingEl.style.display = 'block';
       displayEl.innerHTML = '';
       rawJsonEl.innerHTML = '';
-      
+
       try {
         // For local testing, we'll read the file directly
         // In production, this would be: const response = await fetch('/.netlify/functions/get-schedule');
         const response = await fetch('../data/schedule.json');
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const schedule = await response.json();
         loadingEl.style.display = 'none';
-        
+
         // Display formatted schedule
         displaySchedule(schedule);
-        
+
         // Display raw JSON
         displayRawJson(schedule);
       } catch (error) {
@@ -294,28 +297,28 @@
         `;
       }
     }
-    
+
     function displaySchedule(schedule) {
       const displayEl = document.getElementById('scheduleDisplay');
       const dates = Object.keys(schedule).sort();
-      
+
       let html = '<div class="schedule-grid">';
-      
+
       dates.forEach(date => {
         const dayData = schedule[date];
         const teams = Object.keys(dayData);
-        
+
         html += `
           <div class="day-card">
             <div class="day-header">${formatDate(date)}</div>
             <div class="teams">
         `;
-        
+
         teams.forEach(teamName => {
           const team = dayData[teamName];
           const workers = team.assigned_workers || [];
           const addresses = team.addresses || [];
-          
+
           html += `
             <div class="team">
               <div class="team-name">${teamName}</div>
@@ -330,30 +333,30 @@
             </div>
           `;
         });
-        
+
         html += `
             </div>
           </div>
         `;
       });
-      
+
       html += '</div>';
       displayEl.innerHTML = html;
     }
-    
+
     function formatDate(dateStr) {
       const [day, month, year] = dateStr.split('-');
       const date = new Date(year, month - 1, day);
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       return date.toLocaleDateString('en-US', options);
     }
-    
+
     function displayRawJson(data) {
       const rawJsonEl = document.getElementById('rawJson');
       const jsonStr = JSON.stringify(data, null, 2);
       rawJsonEl.innerHTML = `<pre>${escapeHtml(jsonStr)}</pre>`;
     }
-    
+
     function escapeHtml(text) {
       const map = {
         '&': '&amp;',
@@ -364,7 +367,7 @@
       };
       return text.replace(/[&<>"']/g, m => map[m]);
     }
-    
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', () => {
       displayWorkerRoster();
@@ -372,4 +375,5 @@
     });
   </script>
 </body>
+
 </html>
