@@ -1,7 +1,9 @@
 {
   "17-02-2026": {
     "Team_A": {
-      "assigned_workers": [],
+      "assigned_workers": [
+        "Angelo"
+      ],
       "addresses": []
     },
     "Team_B": {
