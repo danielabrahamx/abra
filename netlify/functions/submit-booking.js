@@ -34,6 +34,8 @@ exports.handler = async (event, context) => {
         const newJob = {
             id: crypto.randomUUID(),
             client_name: params.get('name'),
+            email: params.get('email'),
+            phone: params.get('phone'),
             street: params.get('address'), // Simplified address field
             house_number: '',
             postcode: params.get('postcode') || '',

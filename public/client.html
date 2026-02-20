@@ -46,8 +46,21 @@
                         class="w-full text-sm border-slate-300 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-3 px-4 border">
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
+                        <input type="email" name="email" required placeholder="john@example.com"
+                            class="w-full text-sm border-slate-300 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-3 px-4 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                        <input type="tel" name="phone" required placeholder="07123 456789"
+                            class="w-full text-sm border-slate-300 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-3 px-4 border">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Street Address</label>
                         <input type="text" name="address" required placeholder="123 Main St"
                             class="w-full text-sm border-slate-300 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-3 px-4 border">
