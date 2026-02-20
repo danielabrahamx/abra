@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Abra Worker - Today's Schedule</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"
+        integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+        crossorigin="anonymous"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Safe area handling for mobile if installed as PWA */
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 safe-pb min-h-screen flex flex-col pt-16">
+
+    <!-- Fixed Header -->
+    <header
+        class="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 flex items-center justify-between px-4 py-3 border-b border-slate-200 h-16">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-indigo-600 rounded-md flex items-center justify-center text-white">
+                <i data-lucide="map" class="w-4 h-4"></i>
+            </div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 leading-none">My Shifts</h1>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 pb-24">
+        <div id="job-list-container">
+            <!-- Loaded by JS -->
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        function getTodayString() {
+            const d = new Date();
+            return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+        }
+
+        function loadWorkerData() {
+            const container = document.getElementById('job-list-container');
+            container.innerHTML = ''; // Clear previous
+
+            const daysToFetch = 9;
+            const startDate = new Date();
+
+            for (let i = 0; i < daysToFetch; i++) {
+                const d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+
+                const dateStr = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                const displayDate = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+                const url = `/.netlify/functions/get-schedule?date=${dateStr}&view=worker`;
+
+                const sectionHtml = `
+                    <div class="mb-8 last:mb-0">
+                        <div class="flex items-center justify-between mb-3 px-1">
+                            <h2 class="text-base font-bold text-slate-800">${displayDate}</h2>
+                            ${i === 0 ? '<span class="text-[10px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full uppercase tracking-wider">Today</span>' : ''}
+                        </div>
+                        <div id="day-jobs-${dateStr}" 
+                             hx-get="${url}" 
+                             hx-trigger="load, every 60s [document.visibilityState == 'visible']">
+                             <!-- Loading skeleton -->
+                             <div class="animate-pulse bg-white border border-slate-200 rounded-xl p-4 h-24"></div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', sectionHtml);
+            }
+
+            // Trigger htmx processing for all added elements
+            htmx.process(container);
+        }
+
+        // Initialize automatically when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWorkerData();
+
+            document.body.addEventListener('htmx:afterSwap', function (evt) {
+                lucide.createIcons();
+            });
+        });
+    </script>
+</body>
+
+</html>
