@@ -76,7 +76,18 @@
   "23-02-2026": {
     "Team_A": {
       "assigned_workers": [],
-      "addresses": []
+      "addresses": [
+        {
+          "id": "43284419-b6b9-4fb9-898a-d9f7683c8b95",
+          "street": "Hurst Road",
+          "house_number": "§8",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=%C2%A78%20Hurst%20Road",
+          "client_name": "Kirsty Lord",
+          "notes": "clean batherooms",
+          "time_interval": "9:00-11:00"
+        }
+      ]
     },
     "Team_B": {
       "assigned_workers": [],
