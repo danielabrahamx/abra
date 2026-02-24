@@ -86,6 +86,16 @@
           "client_name": "Kirsty Lord",
           "notes": "clean batherooms",
           "time_interval": "9:00-11:00"
+        },
+        {
+          "id": "6b3302b9-d02f-49a4-a3cb-7ad8d81359d8",
+          "street": "Hurst Road",
+          "house_number": "§8",
+          "status": "pending",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=%C2%A78%20Hurst%20Road",
+          "client_name": "Kirsty Lord",
+          "notes": "clean batherooms",
+          "time_interval": "9:00-11:00"
         }
       ]
     },
