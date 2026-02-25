@@ -1,9 +1,9 @@
 /**
- * get-clients.js - Netlify Function to read clients from GitHub
- * Returns the clients array from GitHub repository
+ * get-clients.js - Netlify Function to read clients from Redis
+ * Returns the clients array from Upstash Redis
  */
 
-const { readJSON } = require('./lib/github-storage');
+const { readJSON } = require('./lib/redis-storage');
 
 exports.handler = async (event, context) => {
     // CORS preflight
@@ -20,9 +20,9 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        console.log('get-clients: reading from GitHub...');
-        const clients = await readJSON('data/clients.json');
-        console.log(`get-clients: retrieved ${clients ? clients.length : 0} clients`);
+        let clients = await readJSON('data/clients.json');
+        if (!Array.isArray(clients)) clients = [];
+        console.log(`get-clients: retrieved ${clients.length} clients`);
 
         return {
             statusCode: 200,

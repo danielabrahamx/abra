@@ -134,6 +134,32 @@
         .job-card.cancelled .job-status-badge {
             background: #9ca3af;
         }
+
+        /* Recurring job indicator */
+        .recurring-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #7c3aed;
+            background: #ede9fe;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .duration-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -152,6 +178,10 @@
                 <button id="btn-manage-clients"
                     class="w-full px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                     Manage Clients
+                </button>
+                <button id="btn-manage-recurring"
+                    class="w-full px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                    Manage Recurring Jobs
                 </button>
                 <button id="btn-clear-all"
                     class="w-full px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
@@ -199,7 +229,7 @@
     <div id="clients-modal" class="hidden fixed inset-0 z-40">
         <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeClientsModal()"></div>
         <div
-            class="absolute inset-4 md:inset-y-8 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden z-50">
+            class="absolute inset-4 md:inset-y-8 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-xl bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden z-50">
             <!-- Modal Header -->
             <div
                 class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-between">
@@ -223,8 +253,24 @@
                         <input id="new-client-house" type="text" placeholder="House # *"
                             class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
                     </div>
-                    <input id="new-client-notes" type="text" placeholder="Notes (optional)"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                    <div class="flex gap-2">
+                        <input id="new-client-hours" type="number" placeholder="Total Hours (e.g. 3)" step="0.5" min="0"
+                            class="w-36 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                        <select id="new-client-time"
+                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white">
+                            <option value="" disabled selected>Start Time</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="new-client-frequency"
+                            class="w-36 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white">
+                            <option value="none">No Recurrence</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="fortnightly">Fortnightly</option>
+                        </select>
+                        <input id="new-client-notes" type="text" placeholder="Notes (optional)"
+                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none" />
+                    </div>
                     <button onclick="addClient()"
                         class="w-full px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
                         Save Client
@@ -236,6 +282,23 @@
 
     <!-- Toast container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Manage Recurring Jobs Modal -->
+    <div id="recurring-modal" class="hidden fixed inset-0 z-40">
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeRecurringModal()"></div>
+        <div
+            class="absolute inset-4 md:inset-y-8 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-lg bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden z-50">
+            <div
+                class="px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white flex items-center justify-between">
+                <h2 class="text-lg font-bold">Recurring Jobs</h2>
+                <button onclick="closeRecurringModal()"
+                    class="text-white hover:bg-white hover:bg-opacity-20 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl">&times;</button>
+            </div>
+            <div id="recurring-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <p class="text-gray-400 text-sm italic text-center py-4">No recurring jobs yet</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ─── Constants ────────────────────────────────────────────
@@ -264,6 +327,21 @@
         let sortableInstances = [];
         let clientsData = [];
 
+        // Generate time dropdown options (30-min intervals, 06:00–20:00)
+        function generateTimeOptions(selectedValue) {
+            let html = '<option value="" disabled ' + (!selectedValue ? 'selected' : '') + '>Start Time</option>';
+            for (let h = 6; h <= 20; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    if (h === 20 && m > 0) break;
+                    const val = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    const sel = (selectedValue === val) ? ' selected' : '';
+                    html += `<option value="${val}"${sel}>${val}</option>`;
+                }
+            }
+            return html;
+        }
+        let recurringData = [];
+
         // ─── Init ─────────────────────────────────────────────────
         function init() {
             renderWorkerRoster();
@@ -278,6 +356,7 @@
             document.getElementById('btn-next-week').addEventListener('click', () => { currentWeekOffset++; renderScheduleGrid(); loadScheduleData(); });
             document.getElementById('btn-clear-all').addEventListener('click', clearAllAssignments);
             document.getElementById('btn-manage-clients').addEventListener('click', openClientsModal);
+            document.getElementById('btn-manage-recurring').addEventListener('click', openRecurringModal);
         }
 
         // ─── Load Clients ─────────────────────────────────────────
@@ -285,7 +364,8 @@
             try {
                 const res = await fetch('/api/get-clients');
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                clientsData = await res.json();
+                const data = await res.json();
+                clientsData = Array.isArray(data) ? data : [];
             } catch (err) {
                 console.error('Failed to load clients:', err);
                 clientsData = [];
@@ -410,18 +490,19 @@
                                                         data-date="${dateKey}" data-team="${teamId}">
                                                     <option value="" disabled selected>Select a client...</option>
                                                     ${clientsData.map(c => `<option value="${c.id}">${c.name} — ${c.house_number} ${c.street}</option>`).join('')}
-                                                    <option value="__new__">+ Add New Address</option>
                                                 </select>
-                                                <input type="text" name="time_interval" placeholder="Time (e.g. 12:45 - 2:15)"
+                                                <select name="time_interval"
+                                                        class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white">
+                                                    ${generateTimeOptions('')}
+                                                </select>
+                                                <input type="number" name="expected_hours" placeholder="Total hours (e.g. 3)" step="0.5" min="0"
                                                        class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
-                                                <div class="manual-address-fields hidden">
-                                                    <input type="text" name="client_name" placeholder="Name (e.g. Helen)"
-                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
-                                                    <input type="text" name="street" placeholder="Street"
-                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
-                                                    <input type="text" name="house_number" placeholder="House #"
-                                                           class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none" />
-                                                </div>
+                                                <select name="recurrence"
+                                                        class="w-full mb-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none bg-white">
+                                                    <option value="none">No Recurrence</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="fortnightly">Fortnightly</option>
+                                                </select>
                                                 <button type="button"
                                                         class="quick-add-submit w-full mt-1 px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
                                                         data-date="${dateKey}" data-team="${teamId}">
@@ -497,15 +578,18 @@
                 });
             });
 
-            // Client dropdown change — show/hide manual fields
+            // Auto-fill fields when a client is selected
             document.querySelectorAll('.client-select').forEach(sel => {
                 sel.addEventListener('change', () => {
-                    const manualFields = sel.closest('.quick-add-fields').querySelector('.manual-address-fields');
-                    if (sel.value === '__new__') {
-                        manualFields.classList.remove('hidden');
-                    } else {
-                        manualFields.classList.add('hidden');
-                    }
+                    const client = clientsData.find(c => c.id === sel.value);
+                    if (!client) return;
+                    const container = sel.closest('.quick-add-fields');
+                    const hoursInput = container.querySelector('input[name="expected_hours"]');
+                    const timeSelect = container.querySelector('select[name="time_interval"]');
+                    const recurrenceSelect = container.querySelector('select[name="recurrence"]');
+                    if (hoursInput && client.expected_hours) hoursInput.value = client.expected_hours;
+                    if (timeSelect && client.default_time_interval) timeSelect.value = client.default_time_interval;
+                    if (recurrenceSelect && client.default_frequency) recurrenceSelect.value = client.default_frequency;
                 });
             });
 
@@ -526,78 +610,63 @@
         async function addNewJob(date, teamId, select, formContainer) {
             const selectedValue = select.value;
             const timeIntervalInput = formContainer.querySelector('input[name="time_interval"]');
+            const expectedHoursInput = formContainer.querySelector('input[name="expected_hours"]');
+            const recurrenceSelect = formContainer.querySelector('select[name="recurrence"]');
             const timeInterval = timeIntervalInput ? timeIntervalInput.value.trim() : '';
+            const expectedHours = expectedHoursInput ? parseFloat(expectedHoursInput.value) || 0 : 0;
+            const recurrence = recurrenceSelect ? recurrenceSelect.value : 'none';
             let street, houseNumber, clientName, notes;
 
             if (!selectedValue) {
-                showToast('Please select a client or "+ Add New Address"', 'warning');
+                showToast('Please select a client', 'warning');
                 return;
             }
 
             try {
-                if (selectedValue === '__new__') {
-                    // Manual input mode -> Create Client FIRST
-                    const nameInput = formContainer.querySelector('input[name="client_name"]');
-                    const streetInput = formContainer.querySelector('input[name="street"]');
-                    const houseInput = formContainer.querySelector('input[name="house_number"]');
+                const client = clientsData.find(c => c.id === selectedValue);
+                if (!client) { showToast('Client not found', 'error'); return; }
+                street = client.street;
+                houseNumber = client.house_number;
+                clientName = client.name;
+                notes = client.notes;
 
-                    clientName = nameInput ? nameInput.value.trim() : '';
-                    street = streetInput ? streetInput.value.trim() : '';
-                    houseNumber = houseInput ? houseInput.value.trim() : '';
-
-                    if (!clientName || !street || !houseNumber) {
-                        showToast('Name, Street, and House # are required to save', 'warning');
-                        return;
-                    }
-
-                    // 1. Save the new client
-                    const saveRes = await fetch(API_POST, {
+                // If recurring, create a recurring rule instead of a one-off job
+                if (recurrence !== 'none') {
+                    const recurPayload = {
+                        action: 'add-recurring-job',
+                        client_name: clientName || '',
+                        street, house_number: houseNumber,
+                        notes: notes || '',
+                        team_id: teamId,
+                        start_date: date,
+                        frequency: recurrence,
+                        time_interval: timeInterval,
+                        expected_hours: expectedHours
+                    };
+                    const rRes = await fetch(API_POST, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'add-client',
-                            name: clientName,
-                            street: street,
-                            house_number: houseNumber
-                        })
+                        body: JSON.stringify(recurPayload)
                     });
-
-                    if (!saveRes.ok) {
-                        const err = await saveRes.json().catch(() => ({}));
-                        throw new Error(err.message || err.error || `Failed to save client: ${saveRes.status}`);
+                    if (!rRes.ok) {
+                        const err = await rRes.json().catch(() => ({}));
+                        throw new Error(err.message || err.error || `Failed to create recurring job`);
                     }
-
-                    // 2. Reload clients so it appears in dropdowns immediately
-                    await loadClients();
-                    renderScheduleGrid(); // Re-render to update dropdowns
-
-                    showToast(`Client "${clientName}" saved!`, 'success');
-
-                    // Proceed to add to schedule
-                } else {
-                    // Saved client mode
-                    const client = clientsData.find(c => c.id === selectedValue);
-                    if (!client) {
-                        showToast('Client not found', 'error');
-                        return;
-                    }
-                    street = client.street;
-                    houseNumber = client.house_number;
-                    clientName = client.name;
-                    notes = client.notes;
+                    showToast(`Recurring ${recurrence} job created!`, 'success');
+                    loadScheduleData();
+                    return;
                 }
 
-                // 3. Add to Schedule
+                // One-off job
                 const addressPayload = { street, house_number: houseNumber };
                 if (clientName) addressPayload.client_name = clientName;
                 if (notes) addressPayload.notes = notes;
 
                 const payload = {
-                    action: 'add-job',
-                    date: date,
-                    team_id: teamId,
+                    action: 'add-job', date, team_id: teamId,
                     address: addressPayload,
-                    time_interval: timeInterval
+                    time_interval: timeInterval,
+                    expected_hours: expectedHours
                 };
 
                 const res = await fetch(API_POST, {
@@ -605,23 +674,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.message || err.error || `Failed to add job: ${res.status}`);
                 }
 
                 showToast(`Address added to schedule`, 'success');
-
-                // Cleanup UI
-                loadScheduleData(); // Refresh the grid
-
-                // Clear time input
+                loadScheduleData();
                 if (timeIntervalInput) timeIntervalInput.value = '';
-
-                // Close the form if still open/finding element
-                // Note: re-rendering grid might have destroyed the form element reference
-                // but we reload data anyway so it's fine.
+                if (expectedHoursInput) expectedHoursInput.value = '';
 
             } catch (err) {
                 console.error('Add job error:', err);
@@ -662,6 +723,9 @@
             if (!scheduleData[date][teamId]) scheduleData[date][teamId] = { assigned_workers: [], addresses: [] };
             scheduleData[date][teamId].assigned_workers = workers;
 
+            // Re-render job cards immediately so duration badges update live
+            renderJobCards(date, teamId, scheduleData[date][teamId]);
+
             // Fire POST to update-schedule.js
             const payload = {
                 action: 'update-workers',
@@ -696,7 +760,10 @@
         // ─── Load Schedule from Server ────────────────────────────
         async function loadScheduleData() {
             try {
-                const res = await fetch(API_GET);
+                const dates = getWeekDates();
+                const from = formatDate(dates[0]);
+                const to = formatDate(dates[6]);
+                const res = await fetch(`${API_GET}?from=${from}&to=${to}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 scheduleData = await res.json();
                 renderAssignments();
@@ -736,21 +803,36 @@
             const addresses = teamData.addresses || [];
             if (addresses.length === 0) return;
 
-            // Find the parent team container (the rounded-lg border div wrapping header + drop zone)
             const zone = document.getElementById(`team-${teamId}-${date}`);
             if (!zone) return;
             const teamContainer = zone.closest('.rounded-lg');
             if (!teamContainer) return;
 
-            // Remove any previously rendered job-list to avoid duplicates on reload
             const existing = teamContainer.querySelector('.job-list');
             if (existing) existing.remove();
+
+            const workerCount = (teamData.assigned_workers || []).length;
 
             const jobList = document.createElement('div');
             jobList.className = 'job-list border-t border-gray-200 divide-y divide-gray-100';
 
             addresses.forEach((addr, idx) => {
                 const isCancelled = addr.status === 'cancelled';
+                const expectedHrs = parseFloat(addr.expected_hours) || 0;
+                let durationStr = '';
+                if (expectedHrs > 0) {
+                    if (workerCount > 0) {
+                        const dur = (expectedHrs / workerCount).toFixed(1).replace(/\.0$/, '');
+                        durationStr = `<span class="duration-badge">⏱ ${dur}h (${expectedHrs}h ÷ ${workerCount})</span>`;
+                    } else {
+                        durationStr = `<span class="duration-badge">⏱ ${expectedHrs}h total</span>`;
+                    }
+                }
+
+                const recurringStr = addr.is_recurring
+                    ? `<span class="recurring-badge">🔁 ${addr.frequency}</span>`
+                    : '';
+
                 const card = document.createElement('div');
                 card.className = `job-card px-3 py-2 flex items-center justify-between gap-2 ${isCancelled ? 'cancelled' : ''}`;
                 card.innerHTML = `
@@ -760,10 +842,14 @@
                             ${addr.house_number} ${addr.street}
                         </span>
                         ${addr.time_interval ? `<span class="block text-xs text-gray-500 font-medium">🕒 ${addr.time_interval}</span>` : ''}
-                        <span class="job-status-badge ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white
-                            ${isCancelled ? 'bg-gray-400' : addr.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}">
-                            ${addr.status || 'pending'}
-                        </span>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            ${durationStr}
+                            ${recurringStr}
+                            <span class="job-status-badge inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase text-white
+                                ${isCancelled ? 'bg-gray-400' : addr.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}">
+                                ${addr.status || 'pending'}
+                            </span>
+                        </div>
                     </div>
                     <div class="flex flex-col gap-1 items-end">
                         ${!isCancelled ? `
@@ -911,6 +997,9 @@
         // ─── Manage Clients Modal ────────────────────────────────
         function openClientsModal() {
             document.getElementById('clients-modal').classList.remove('hidden');
+            // Populate the add-client time dropdown
+            const timeSelect = document.getElementById('new-client-time');
+            if (timeSelect) timeSelect.innerHTML = generateTimeOptions('');
             renderClientsModal();
         }
 
@@ -920,22 +1009,99 @@
 
         function renderClientsModal() {
             const list = document.getElementById('clients-list');
+            if (!Array.isArray(clientsData)) clientsData = [];
             if (clientsData.length === 0) {
                 list.innerHTML = '<p class="text-gray-400 text-sm italic text-center py-4">No clients yet. Add one below.</p>';
                 return;
             }
-            list.innerHTML = clientsData.map(c => `
-                <div class="flex items-start justify-between bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-gray-900">${c.name}</p>
-                        <p class="text-xs text-gray-600">${c.house_number} ${c.street}</p>
-                        ${c.notes ? `<p class="text-xs text-gray-400 italic mt-1">${c.notes}</p>` : ''}
+            list.innerHTML = clientsData.map(c => {
+                const freqLabel = c.default_frequency === 'weekly' ? 'Weekly' : c.default_frequency === 'fortnightly' ? 'Fortnightly' : '';
+                return `
+                <div class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm" id="client-card-${c.id}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-gray-900">${c.name}</p>
+                            <p class="text-xs text-gray-600">${c.house_number} ${c.street}</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${c.expected_hours ? `<span class="duration-badge">⏱ ${c.expected_hours}h</span>` : ''}
+                                ${freqLabel ? `<span class="recurring-badge">🔁 ${freqLabel}</span>` : ''}
+                                ${c.default_time_interval ? `<span class="text-xs text-gray-500">🕒 ${c.default_time_interval}</span>` : ''}
+                            </div>
+                            ${c.notes ? `<p class="text-xs text-gray-400 italic mt-1">${c.notes}</p>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-1 ml-2 shrink-0">
+                            <button onclick="startEditClient('${c.id}')" class="px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors">Edit</button>
+                            <button onclick="deleteClient('${c.id}')" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">Delete</button>
+                        </div>
                     </div>
-                    <button onclick="deleteClient('${c.id}')" class="ml-2 shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors" title="Delete client">
-                        Delete
-                    </button>
-                </div>
-            `).join('');
+                    <div id="edit-form-${c.id}" class="hidden mt-3 pt-3 border-t border-gray-200 space-y-2">
+                        <div class="flex gap-2">
+                            <input type="text" data-field="name" value="${c.name}" placeholder="Name" class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none" />
+                            <input type="text" data-field="house_number" value="${c.house_number}" placeholder="House #" class="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none" />
+                        </div>
+                        <input type="text" data-field="street" value="${c.street}" placeholder="Street" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none" />
+                        <div class="flex gap-2">
+                            <input type="number" data-field="expected_hours" value="${c.expected_hours || ''}" placeholder="Total Hours" step="0.5" min="0" class="w-24 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none" />
+                            <select data-field="default_time_interval" class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none bg-white">
+                                ${generateTimeOptions(c.default_time_interval || '')}
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <select data-field="default_frequency" class="w-32 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none bg-white">
+                                <option value="none" ${(c.default_frequency || 'none') === 'none' ? 'selected' : ''}>No Recurrence</option>
+                                <option value="weekly" ${c.default_frequency === 'weekly' ? 'selected' : ''}>Weekly</option>
+                                <option value="fortnightly" ${c.default_frequency === 'fortnightly' ? 'selected' : ''}>Fortnightly</option>
+                            </select>
+                            <input type="text" data-field="notes" value="${c.notes || ''}" placeholder="Notes" class="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-400 outline-none" />
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="saveEditClient('${c.id}')" class="flex-1 px-2 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">Save</button>
+                            <button onclick="cancelEditClient('${c.id}')" class="flex-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors">Cancel</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function startEditClient(clientId) {
+            const form = document.getElementById(`edit-form-${clientId}`);
+            if (form) form.classList.toggle('hidden');
+        }
+
+        function cancelEditClient(clientId) {
+            const form = document.getElementById(`edit-form-${clientId}`);
+            if (form) form.classList.add('hidden');
+        }
+
+        async function saveEditClient(clientId) {
+            const form = document.getElementById(`edit-form-${clientId}`);
+            if (!form) return;
+
+            const payload = { action: 'edit-client', client_id: clientId };
+            form.querySelectorAll('[data-field]').forEach(el => {
+                const field = el.dataset.field;
+                payload[field] = el.value;
+            });
+
+            try {
+                const res = await fetch(API_POST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || err.error || `Failed: ${res.status}`);
+                }
+                showToast('Client updated', 'success');
+                await loadClients();
+                renderClientsModal();
+                renderScheduleGrid();
+                loadScheduleData();
+            } catch (err) {
+                console.error('Edit client error:', err);
+                showToast(`Failed — ${err.message}`, 'error');
+            }
         }
 
         async function addClient() {
@@ -943,11 +1109,17 @@
             const streetEl = document.getElementById('new-client-street');
             const houseEl = document.getElementById('new-client-house');
             const notesEl = document.getElementById('new-client-notes');
+            const hoursEl = document.getElementById('new-client-hours');
+            const timeEl = document.getElementById('new-client-time');
+            const freqEl = document.getElementById('new-client-frequency');
 
             const name = nameEl.value.trim();
             const street = streetEl.value.trim();
             const house_number = houseEl.value.trim();
             const notes = notesEl.value.trim();
+            const expected_hours = parseFloat(hoursEl.value) || 0;
+            const default_time_interval = timeEl.value.trim();
+            const default_frequency = freqEl.value;
 
             if (!name || !street || !house_number) {
                 showToast('Name, Street, and House # are required', 'warning');
@@ -958,22 +1130,25 @@
                 const res = await fetch(API_POST, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'add-client', name, street, house_number, notes })
+                    body: JSON.stringify({
+                        action: 'add-client', name, street, house_number, notes,
+                        expected_hours, default_frequency, default_time_interval
+                    })
                 });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.message || err.error || `Failed to add client: ${res.status}`);
                 }
-                const data = await res.json();
                 showToast(`Client "${name}" added`, 'success');
 
-                // Clear inputs
                 nameEl.value = '';
                 streetEl.value = '';
                 houseEl.value = '';
                 notesEl.value = '';
+                hoursEl.value = '';
+                timeEl.innerHTML = generateTimeOptions('');
+                freqEl.value = 'none';
 
-                // Refresh clients and re-render
                 await loadClients();
                 renderClientsModal();
                 renderScheduleGrid();
@@ -1006,6 +1181,104 @@
             } catch (err) {
                 console.error('Delete client error:', err);
                 showToast(`Failed to delete client — ${err.message}`, 'error');
+            }
+        }
+
+        // ─── Manage Recurring Jobs Modal ────────────────────────
+        async function loadRecurringJobs() {
+            try {
+                // We fetch the recurring rules via GET on the schedule endpoint
+                // For a dedicated endpoint we'd need a separate function, but
+                // we can load directly from Redis via a helper fetch
+                const res = await fetch('/api/get-schedule');
+                // recurring data is embedded in the schedule response by
+                // get-schedule.js, but we also need the raw rules.
+                // For now, let's load recurring-jobs from update-schedule
+                // by reading them as a separate action. We'll use a simple approach:
+                // fetch recurring rules via a POST action
+                const rRes = await fetch('/api/update-schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get-recurring-jobs' })
+                });
+                // This action doesn't exist yet, so fallback: we load from schedule
+                // and extract recurring info. For now, we store recurring data
+                // client-side when the schedule loads.
+            } catch (err) {
+                console.error('Failed to load recurring jobs:', err);
+            }
+        }
+
+        function openRecurringModal() {
+            document.getElementById('recurring-modal').classList.remove('hidden');
+            renderRecurringModal();
+        }
+
+        function closeRecurringModal() {
+            document.getElementById('recurring-modal').classList.add('hidden');
+        }
+
+        function renderRecurringModal() {
+            const list = document.getElementById('recurring-list');
+            // Collect recurring jobs from schedule data
+            const recurringJobs = [];
+            const seen = new Set();
+            Object.values(scheduleData).forEach(dayData => {
+                TEAMS.forEach(teamId => {
+                    const teamData = dayData[teamId];
+                    if (!teamData || !teamData.addresses) return;
+                    teamData.addresses.forEach(addr => {
+                        if (addr.is_recurring && addr.recurring_id && !seen.has(addr.recurring_id)) {
+                            seen.add(addr.recurring_id);
+                            recurringJobs.push(addr);
+                        }
+                    });
+                });
+            });
+
+            if (recurringJobs.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-sm italic text-center py-4">No recurring jobs found. Add one from the schedule grid using the recurrence dropdown.</p>';
+                return;
+            }
+
+            list.innerHTML = recurringJobs.map(r => `
+                <div class="flex items-start justify-between bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-900">${r.client_name || 'Unknown'}</p>
+                        <p class="text-xs text-gray-600">${r.house_number} ${r.street}</p>
+                        <div class="flex gap-1 mt-1">
+                            <span class="recurring-badge">🔁 ${r.frequency}</span>
+                            ${r.expected_hours ? `<span class="duration-badge">⏱ ${r.expected_hours}h</span>` : ''}
+                            ${r.time_interval ? `<span class="text-xs text-gray-500">🕒 ${r.time_interval}</span>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="deleteRecurringJob('${r.recurring_id}')"
+                            class="ml-2 shrink-0 px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                            title="Delete this recurring rule">
+                        Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteRecurringJob(ruleId) {
+            if (!confirm('Delete this recurring job rule? Future occurrences will no longer be generated.')) return;
+            try {
+                const res = await fetch(API_POST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-recurring-job', rule_id: ruleId })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || err.error || `Failed: ${res.status}`);
+                }
+                showToast('Recurring job deleted', 'success');
+                await loadScheduleData();
+                renderRecurringModal();
+            } catch (err) {
+                console.error('Delete recurring error:', err);
+                showToast(`Failed — ${err.message}`, 'error');
             }
         }
 

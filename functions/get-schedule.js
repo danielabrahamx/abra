@@ -1,10 +1,11 @@
 /**
  * get-schedule.js - Netlify Function to retrieve schedule data
- * Returns schedule from GitHub with support for assigned_workers arrays
+ * Returns schedule from Redis with support for assigned_workers arrays
  * Generates default 7-day template if schedule is missing/empty
+ * Projects recurring jobs onto the requested date range
  */
 
-const { readJSON } = require('./lib/github-storage');
+const { readJSON } = require('./lib/redis-storage');
 
 /**
  * Generate a default 7-day schedule template
@@ -41,12 +42,109 @@ function generateDefaultSchedule() {
 }
 
 /**
- * Read schedule from GitHub, or return default template
+ * Parse a DD-MM-YYYY string into a Date object
+ */
+function parseDateKey(dateKey) {
+    const [day, month, year] = dateKey.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
+/**
+ * Format a Date as DD-MM-YYYY
+ */
+function formatDateKey(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+/**
+ * Project recurring jobs onto the schedule for the requested dates
+ * @param {Object} schedule - The base schedule
+ * @param {Array} recurringJobs - List of recurring job templates
+ * @param {Array} requestedDateKeys - Array of DD-MM-YYYY strings for the requested week
+ * @returns {Object} Schedule with recurring jobs merged in
+ */
+function projectRecurringJobs(schedule, recurringJobs, requestedDateKeys) {
+    if (!recurringJobs || recurringJobs.length === 0) return schedule;
+
+    for (const rule of recurringJobs) {
+        if (rule.paused) continue;
+
+        const startDate = parseDateKey(rule.start_date);
+        const dayOfWeek = startDate.getDay(); // 0=Sun, 1=Mon, ...
+        const intervalDays = rule.frequency === 'fortnightly' ? 14 : 7;
+
+        for (const dateKey of requestedDateKeys) {
+            const currentDate = parseDateKey(dateKey);
+
+            // Must match the same day of week
+            if (currentDate.getDay() !== dayOfWeek) continue;
+
+            // Must be on or after the start date
+            const diffMs = currentDate.getTime() - startDate.getTime();
+            if (diffMs < 0) continue;
+
+            // Check interval alignment
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+            if (diffDays % intervalDays !== 0) continue;
+
+            // Check if this specific occurrence is in the exceptions list
+            const exceptions = rule.exceptions || [];
+            if (exceptions.includes(dateKey)) continue;
+
+            // Project this recurring job onto the schedule
+            const teamId = rule.team_id;
+            if (!schedule[dateKey]) {
+                schedule[dateKey] = {
+                    Team_A: { assigned_workers: [], addresses: [] },
+                    Team_B: { assigned_workers: [], addresses: [] }
+                };
+            }
+            if (!schedule[dateKey][teamId]) {
+                schedule[dateKey][teamId] = { assigned_workers: [], addresses: [] };
+            }
+            if (!Array.isArray(schedule[dateKey][teamId].addresses)) {
+                schedule[dateKey][teamId].addresses = [];
+            }
+
+            // Check if this recurring job is already manually placed on this date
+            const alreadyExists = schedule[dateKey][teamId].addresses.some(
+                a => a.recurring_id === rule.id
+            );
+            if (alreadyExists) continue;
+
+            // Create the job instance from the recurring template
+            const job = {
+                id: `${rule.id}_${dateKey}`,
+                recurring_id: rule.id,
+                street: rule.street,
+                house_number: rule.house_number,
+                client_name: rule.client_name || '',
+                notes: rule.notes || '',
+                status: 'pending',
+                time_interval: rule.time_interval || '',
+                expected_hours: rule.expected_hours || 0,
+                maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rule.house_number + ' ' + rule.street)}`,
+                is_recurring: true,
+                frequency: rule.frequency
+            };
+
+            schedule[dateKey][teamId].addresses.push(job);
+        }
+    }
+
+    return schedule;
+}
+
+/**
+ * Read schedule from Redis, or return default template
  * @returns {Object} Schedule data
  */
 async function readSchedule() {
     try {
-        console.log('get-schedule: reading from GitHub...');
+        console.log('get-schedule: reading from Redis...');
         let schedule = await readJSON('data/schedule.json');
 
         // If no schedule exists, generate default
@@ -76,7 +174,7 @@ async function readSchedule() {
 
         return schedule;
     } catch (error) {
-        console.error('Error reading schedule from GitHub:', error);
+        console.error('Error reading schedule from Redis:', error);
         return generateDefaultSchedule();
     }
 }
@@ -96,7 +194,39 @@ exports.handler = async (event, context) => {
             };
         }
 
-        const schedule = await readSchedule();
+        let schedule = await readSchedule();
+
+        // Accept optional from/to query params to ensure date range has entries
+        const params = event.queryStringParameters || {};
+        if (params.from && params.to) {
+            const fromDate = parseDateKey(params.from);
+            const toDate = parseDateKey(params.to);
+            if (!isNaN(fromDate) && !isNaN(toDate)) {
+                const cursor = new Date(fromDate);
+                while (cursor <= toDate) {
+                    const dk = formatDateKey(cursor);
+                    if (!schedule[dk]) {
+                        schedule[dk] = {
+                            Team_A: { assigned_workers: [], addresses: [] },
+                            Team_B: { assigned_workers: [], addresses: [] }
+                        };
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+            }
+        }
+
+        // Load recurring jobs and project them
+        try {
+            let recurringJobs = await readJSON('data/recurring-jobs.json');
+            if (!Array.isArray(recurringJobs)) recurringJobs = [];
+            if (recurringJobs.length > 0) {
+                const dateKeys = Object.keys(schedule);
+                schedule = projectRecurringJobs(schedule, recurringJobs, dateKeys);
+            }
+        } catch (err) {
+            console.error('Error projecting recurring jobs:', err);
+        }
 
         return {
             statusCode: 200,
